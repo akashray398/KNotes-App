@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">KNotes</string>
+    <string name="completed_tasks_count">Completed (%1$d)</string>
+    <string name="tasks_summary">%1$d pending • %2$d completed today</string>
+    <string name="percent_format">%1$d%%</string>
+    <string name="archive">Archive</string>
+    <string name="archived_notes_subtitle">Your archived notes</string>
+    <string name="trash">Trash</string>
+    <string name="trash_subtitle">Notes are deleted after 30 days</string>
+</resources>

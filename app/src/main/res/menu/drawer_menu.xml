@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/notesFragment"
+            android:icon="@drawable/ic_notes"
+            android:title="Notes" />
+        <item
+            android:id="@+id/tasksFragment"
+            android:icon="@drawable/ic_tasks"
+            android:title="Tasks" />
+    </group>
+
+    <item android:title="Organize">
+        <menu>
+            <item
+                android:id="@+id/archiveFragment"
+                android:icon="@drawable/ic_sort"
+                android:title="Archive" />
+            <item
+                android:id="@+id/trashFragment"
+                android:icon="@drawable/ic_back"
+                android:title="Trash" />
+        </menu>
+    </item>
+
+    <item android:title="Settings">
+        <menu>
+            <item
+                android:id="@+id/action_theme"
+                android:icon="@drawable/ic_ai_assist"
+                android:title="Appearance" />
+        </menu>
+    </item>
+</menu>

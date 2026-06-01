@@ -1,0 +1,54 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.KNotes" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/primaryLight</item>
+        <item name="colorOnPrimary">@color/onPrimaryLight</item>
+        <item name="colorPrimaryContainer">@color/primaryContainerLight</item>
+        <item name="colorOnPrimaryContainer">@color/onPrimaryContainerLight</item>
+
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/secondaryLight</item>
+        <item name="colorOnSecondary">@color/onSecondaryLight</item>
+        <item name="colorSecondaryContainer">@color/secondaryContainerLight</item>
+        <item name="colorOnSecondaryContainer">@color/onSecondaryContainerLight</item>
+
+        <!-- Tertiary brand color. -->
+        <item name="colorTertiary">@color/tertiaryLight</item>
+        <item name="colorOnTertiary">@color/onTertiaryLight</item>
+        <item name="colorTertiaryContainer">@color/tertiaryContainerLight</item>
+        <item name="colorOnTertiaryContainer">@color/onTertiaryContainerLight</item>
+
+        <!-- Status bar and navigation bar. -->
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="android:windowLightStatusBar">true</item>
+        
+        <!-- Shape -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.KNotes.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.KNotes.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.KNotes.LargeComponent</item>
+    </style>
+
+    <style name="Theme.KNotes" parent="Base.Theme.KNotes" />
+
+    <style name="Theme.KNotes.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:statusBarColor">@color/splash_background</item>
+        <item name="android:navigationBarColor">@color/splash_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+    </style>
+
+    <style name="ShapeAppearance.KNotes.SmallComponent" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <style name="ShapeAppearance.KNotes.MediumComponent" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearance.KNotes.LargeComponent" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerSize">28dp</item>
+    </style>
+</resources>

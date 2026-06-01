@@ -1,0 +1,54 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    
+    <!-- Sophisticated Gradient Background Shape -->
+    <path
+        android:pathData="M30,20 H90 C100,20 110,30 110,40 V80 C110,100 90,110 70,110 H30 C15,110 10,95 10,80 V40 C10,25 15,20 30,20 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="110"
+                android:endY="110"
+                android:startX="10"
+                android:startY="20"
+                android:type="linear">
+                <item android:color="#FF6200EE" android:offset="0.0"/>
+                <item android:color="#FF3700B3" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Glassmorphism-style Accent -->
+    <path
+        android:pathData="M80,20 C95,20 110,35 110,50 L50,110 C35,110 20,95 20,80 Z"
+        android:fillAlpha="0.15"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Unique Stylized 'K' -->
+    <path
+        android:pathData="M42,40 V82"
+        android:strokeWidth="10"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"/>
+    
+    <path
+        android:pathData="M42,61 L75,40"
+        android:strokeWidth="10"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"/>
+
+    <path
+        android:pathData="M45,61 L78,82"
+        android:strokeWidth="10"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"/>
+
+    <!-- Dynamic Sparkle/Dot -->
+    <path
+        android:pathData="M85,65 A6,6 0 1,1 73,65 A6,6 0 1,1 85,65"
+        android:fillColor="#03DAC6"/>
+
+</vector>
