@@ -19,16 +19,16 @@ KNotes follows the **Material You** guidelines, emphasizing personalization and 
 
 ## 🛠 Tech Stack & Modern Tools
 
-| Layer | Technologies |
-| :--- | :--- |
-| **Language** | Kotlin (Coroutines + Flow) |
-| **Dependency Injection** | Hilt (Dagger) |
-| **Local Persistence** | Room Database (SQLite) |
-| **Jetpack Suite** | WorkManager, DataStore, Lifecycle, Navigation |
-| **UI Framework** | ViewBinding + Material 3 Components |
-| **Text Processing** | Markwon (Markdown rendering), Speech-to-Text |
+| Layer | Technologies                                                  |
+| :--- |:--------------------------------------------------------------|
+| **Language** | Kotlin                                                        |
+| **Dependency Injection** | Hilt                                                          |
+| **Local Persistence** | Room Database (SQLite)                                        |
+| **Jetpack Suite** | WorkManager, DataStore, Lifecycle, Navigation                 |
+| **UI Framework** | ViewBinding + Material 3 Components                           |
+| **Text Processing** | Markwon (Markdown rendering), Speech-to-Text                  |
 | **Security** | BiometricPrompt, Security-Crypto (EncryptedSharedPreferences) |
-| **Networking** | Firebase (Firestore + Auth) |
+| **Networking** | Firebase (Firestore + Auth)                                   |
 
 ---
 
@@ -104,7 +104,7 @@ KNotes/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/KNotes.git
+   git clone https://github.com/akashray398/KNotes-App.git
    ```
 2. **Open in Android Studio**:
    Import as a Gradle project (Arctic Fox or newer recommended).
