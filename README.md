@@ -1,137 +1,322 @@
 # 🚀 KNotes: Premium Productivity Ecosystem
 
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-purple.svg?style=flat&logo=kotlin)](https://kotlinlang.org)
+<div align="center">
+
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-purple.svg?style=flat\&logo=kotlin)](https://kotlinlang.org)
 [![Material 3](https://img.shields.io/badge/Design-Material--3-blue.svg?style=flat)](https://m3.material.io)
 [![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%2B%20Clean-green.svg?style=flat)]()
-[![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B-orange.svg?style=flat&logo=android)](https://www.android.com)
+[![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B-orange.svg?style=flat\&logo=android)](https://www.android.com)
 
-**KNotes** is not just another note-taking application; it is a high-performance, premium productivity suite designed for modern Android users. Built with an uncompromising focus on **Material 3 Motion Design**, **AI-Assisted Workflows**, and **Robust Architectural Patterns**, KNotes bridges the gap between simple capture tools and complex knowledge management systems like Notion and Evernote.
+### ✨ AI-Powered Note Taking • Material 3 Design • Modern Productivity
+
+KNotes is a premium Android productivity suite built with **Kotlin**, **Material 3**, and **Clean Architecture**. Designed to help users capture ideas, manage tasks, organize knowledge, and streamline workflows with a beautiful and responsive user experience.
+
+</div>
 
 ---
 
 ## 🎨 Design Philosophy
-KNotes follows the **Material You** guidelines, emphasizing personalization and fluidity.
-- **Micro-Interactions**: Every swipe, tap, and scroll is accompanied by smooth Material Motion transitions.
-- **Glassmorphism & Depth**: Subtle radial gradients and elevation cards create a 3D depth effect.
-- **Adaptive Layouts**: Seamlessly transitions between list and grid views with optimized spacing.
+
+KNotes embraces the principles of **Material You**, delivering a personalized and delightful user experience.
+
+### 🌈 Modern UI Experience
+
+* Material 3 dynamic theming
+* Adaptive layouts for different screen sizes
+* Elegant typography and spacing
+* Light & Dark theme support
+
+### ✨ Motion & Interactions
+
+* Smooth Material Motion transitions
+* Delightful micro-interactions
+* Fluid list and grid animations
+* Responsive touch feedback
+
+### 🎯 Productivity First
+
+* Fast note creation and editing
+* Minimal distractions
+* Organized information hierarchy
+* Optimized workflows
 
 ---
 
-## Screenshots 
-<img width="745" height="1600" alt="WhatsApp Image 2026-06-03 at 21 32" src="https://github.com/user-attachments/assets/937f00e3-cf69-47b8-8e1b-1936e52fd968" />
-<img width="745" height="1600" alt="WhatsApp Image 2026-06-03 at 21 32 45" src="https://github.com/user-attachments/assets/a5df292f-7d04-4414-8c10-a8d4875a588f" />
-<img width="750" height="1600" alt="WhatsApp Image 2026-06-03 at 21" src="https://github.com/user-attachments/assets/2b406d10-1bfe-4d96-85dd-62ab7a8d9892" />
+## 📸 App Preview
 
+<div align="center">
 
-## 🛠 Tech Stack & Modern Tools
+<table>
+<tr>
+<td align="center">
+<img src="https://github.com/user-attachments/assets/937f00e3-cf69-47b8-8e1b-1936e52fd968" width="220"/><br/>
+<b>Notes Dashboard</b>
+</td>
 
-| Layer | Technologies                                                  |
-| :--- |:--------------------------------------------------------------|
-| **Language** | Kotlin                                                        |
-| **Dependency Injection** | Hilt                                                          |
-| **Local Persistence** | Room Database (SQLite)                                        |
-| **Jetpack Suite** | WorkManager, DataStore, Lifecycle, Navigation                 |
-| **UI Framework** | ViewBinding + Material 3 Components                           |
-| **Text Processing** | Markwon (Markdown rendering), Speech-to-Text                  |
-| **Security** | BiometricPrompt, Security-Crypto (EncryptedSharedPreferences) |
-| **Networking** | Firebase (Firestore + Auth)                                   |
+<td align="center">
+<img src="https://github.com/user-attachments/assets/a5df292f-7d04-4414-8c10-a8d4875a588f" width="220"/><br/>
+<b>Rich Note Editor</b>
+</td>
 
----
+<td align="center">
+<img src="https://github.com/user-attachments/assets/2b406d10-1bfe-4d96-85dd-62ab7a8d9892" width="220"/><br/>
+<b>Task Management</b>
+</td>
+</tr>
+</table>
 
-## 📐 High-Level Architecture
+</div>
 
-KNotes leverages the **MVVM (Model-View-ViewModel)** pattern combined with a **Clean Repository Layer** to ensure scalability and testability.
-
-```mermaid
-graph TD
-    subgraph UI_Layer [View / UI Layer]
-        A[NotesFragment] -->|Observes| B[NotesViewModel]
-        C[TasksFragment] -->|Observes| D[TasksViewModel]
-    end
-
-    subgraph Business_Logic [Domain Layer]
-        B --> E[NoteRepository]
-        D --> F[TaskRepository]
-    end
-
-    subgraph Data_Layer [Data Source Layer]
-        E --> G[(Room Database)]
-        F --> G
-        E --> H[Firestore Cloud]
-        I[SettingsManager] --> J[DataStore Prefs]
-    end
-
-    subgraph Background_Services [Automation]
-        K[WorkManager] -->|30-Day Auto Cleanup| G
-    end
-```
+<p align="center">
+<i>Beautiful • Fast • Intelligent</i>
+</p>
 
 ---
 
 ## 🌟 Key Features
 
-### 📝 Note Management
-- **Pin & Favorite**: Instant access to your most critical thoughts.
-- **Smart Archive**: declutter your workspace without losing data.
-- **30-Day Trash**: Accidental deletion recovery with automatic purging via **WorkManager**.
+### 📝 Smart Note Management
 
-### 🤖 AI Assistant (✨)
-- **Auto-Summarization**: Condense long notes into actionable points.
-- **Task Extraction**: Automatically convert bullet points into items in your Tasks list.
-- **Intelligent Titles**: AI suggests catchy titles based on your writing context.
+* Create, edit, and organize notes effortlessly
+* Pin important notes for quick access
+* Mark favorites for better organization
+* Archive notes without deleting them
+* Intelligent search and filtering
 
-### ⚡ Performance Writing
-- **Markdown Support**: Real-time rendering of headings, bold, code blocks, and lists.
-- **Formatting Toolbar**: Dedicated quick-access bar above the soft keyboard.
-- **Voice-to-Text**: High-accuracy transcription for hands-free ideation.
+### 🗑️ Advanced Recovery System
+
+* Dedicated trash management
+* 30-day automatic recovery window
+* Scheduled cleanup using WorkManager
+* Protection against accidental deletion
+
+### 🤖 AI Assistant
+
+* Auto-summarization of long notes
+* Intelligent title generation
+* Task extraction from content
+* Context-aware productivity suggestions
+
+### ⚡ Powerful Writing Experience
+
+* Markdown support with live rendering
+* Rich formatting toolbar
+* Voice-to-text note creation
+* Fast and distraction-free editor
+
+### 🔒 Security & Privacy
+
+* Biometric authentication support
+* Encrypted local storage
+* Secure preference management
+* User-focused privacy controls
+
+### ☁️ Cloud Sync
+
+* Firebase Authentication
+* Firestore cloud synchronization
+* Cross-device accessibility
+* Secure cloud backup
 
 ---
 
-## 📂 Project Hierarchy
+## 🛠 Tech Stack
+
+| Layer                | Technology                        |
+| -------------------- | --------------------------------- |
+| Language             | Kotlin                            |
+| Architecture         | MVVM + Clean Architecture         |
+| Dependency Injection | Hilt                              |
+| Database             | Room                              |
+| Cloud Services       | Firebase Auth + Firestore         |
+| Background Tasks     | WorkManager                       |
+| Preferences          | DataStore                         |
+| UI Framework         | Material 3 + ViewBinding          |
+| Security             | BiometricPrompt + Security Crypto |
+| Markdown Rendering   | Markwon                           |
+| Navigation           | Jetpack Navigation                |
+| Lifecycle            | AndroidX Lifecycle Components     |
+
+---
+
+## 📐 Architecture Overview
+
+KNotes follows a scalable architecture based on **MVVM**, **Repository Pattern**, and **Single Source of Truth** principles.
+
+```mermaid
+graph TD
+
+    subgraph UI Layer
+        A[Notes Fragment]
+        B[Tasks Fragment]
+        C[Settings Fragment]
+    end
+
+    subgraph ViewModels
+        D[NotesViewModel]
+        E[TasksViewModel]
+        F[SettingsViewModel]
+    end
+
+    subgraph Repository Layer
+        G[Note Repository]
+        H[Task Repository]
+    end
+
+    subgraph Local Storage
+        I[(Room Database)]
+        J[(DataStore)]
+    end
+
+    subgraph Cloud Services
+        K[(Firebase Auth)]
+        L[(Firestore)]
+    end
+
+    subgraph Background Processing
+        M[WorkManager]
+    end
+
+    A --> D
+    B --> E
+    C --> F
+
+    D --> G
+    E --> H
+
+    G --> I
+    H --> I
+
+    F --> J
+
+    G --> L
+    H --> L
+
+    L --> K
+
+    M --> I
+```
+
+---
+
+## 📂 Project Structure
 
 ```text
 KNotes/
 ├── app/
-│   ├── src/main/java/com/example/knotes/
-│   │   ├── data/             # Room Entities, DAOs, & Database Configuration
-│   │   ├── di/               # Hilt Dependency Injection Modules
-│   │   ├── repository/       # Clean Data Access Layer (Repository Pattern)
-│   │   ├── ui/               # MVVM ViewModels & Fragments (UI Layer)
-│   │   ├── util/             # Security, Reminders, and Settings Managers
-│   │   └── worker/           # WorkManager Tasks (Auto-Trash Cleanup)
-│   └── src/main/res/         # Material 3 XML Layouts, Drawables, & Themes
-├── build.gradle.kts          # Top-level build configuration
-└── libs.versions.toml        # Centralized Version Catalog
+│
+├── data/
+│   ├── dao/
+│   ├── database/
+│   ├── entity/
+│   └── model/
+│
+├── repository/
+│
+├── di/
+│
+├── ui/
+│   ├── notes/
+│   ├── tasks/
+│   ├── settings/
+│   └── shared/
+│
+├── util/
+│
+├── worker/
+│
+├── build.gradle.kts
+└── libs.versions.toml
 ```
 
 ---
 
 ## 🚀 Getting Started
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/akashray398/KNotes-App.git
-   ```
-2. **Open in Android Studio**:
-   Import as a Gradle project (Arctic Fox or newer recommended).
-3. **Sync Gradle**:
-   Ensure all dependencies are downloaded via the Version Catalog.
-4. **Run the app**:
-   Connect an Android device (API 26+) and hit `Run`.
+### 1️⃣ Clone Repository
+
+```bash
+git clone https://github.com/akashray398/KNotes-App.git
+```
+
+### 2️⃣ Open in Android Studio
+
+Open the project using the latest stable version of Android Studio.
+
+### 3️⃣ Sync Dependencies
+
+Allow Gradle to download and configure all required dependencies.
+
+### 4️⃣ Run Application
+
+Connect an Android device or emulator running Android 8.0 (API 26) or higher.
 
 ---
 
-## 🤝 Contribution
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create.
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
+## 📋 Requirements
+
+| Requirement    | Version           |
+| -------------- | ----------------- |
+| Android Studio | Latest Stable     |
+| Minimum SDK    | 26                |
+| Target SDK     | 36                |
+| Kotlin         | 2.0.21            |
+| Gradle         | Latest Compatible |
+
+---
+
+## 🗺️ Future Roadmap
+
+* [ ] AI note categorization
+* [ ] AI-powered chat assistant
+* [ ] Collaborative notes
+* [ ] Rich text editor
+* [ ] Calendar integration
+* [ ] Note sharing system
+* [ ] Wear OS support
+* [ ] Tablet optimized layouts
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome and greatly appreciated.
+
+1. Fork the repository
+2. Create your feature branch
+
+```bash
+git checkout -b feature/amazing-feature
+```
+
+3. Commit your changes
+
+```bash
+git commit -m "Add amazing feature"
+```
+
+4. Push to GitHub
+
+```bash
+git push origin feature/amazing-feature
+```
+
 5. Open a Pull Request
 
 ---
 
 ## 📜 License
-Distributed under the MIT License. See `LICENSE` for more information.
 
-**Made with ❤️ by Akash**
+This project is licensed under the MIT License.
+
+See the `LICENSE` file for details.
+
+---
+
+<div align="center">
+
+### ⭐ If you like KNotes, consider giving it a star!
+
+Made with ❤️ by **Akash**
+
+</div>
