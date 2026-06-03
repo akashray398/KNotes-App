@@ -54,7 +54,7 @@ KNotes embraces the principles of **Material You**, delivering a personalized an
 </td>
 
 <td align="center">
-<img src=" https://github.com/user-attachments/assets/937f00e3-cf69-47b8-8e1b-1936e52fd968" width="220"/><br/>
+<img src="https://github.com/user-attachments/assets/937f00e3-cf69-47b8-8e1b-1936e52fd968" width="220"/><br/>
 <b>Rich Note Editor</b>
 </td>
 
