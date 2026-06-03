@@ -49,12 +49,12 @@ KNotes embraces the principles of **Material You**, delivering a personalized an
 <table>
 <tr>
 <td align="center">
-<img src="https://github.com/user-attachments/assets/937f00e3-cf69-47b8-8e1b-1936e52fd968" width="220"/><br/>
+<img src="https://github.com/user-attachments/assets/a5df292f-7d04-4414-8c10-a8d4875a588f" width="220"/><br/>
 <b>Notes Dashboard</b>
 </td>
 
 <td align="center">
-<img src="https://github.com/user-attachments/assets/a5df292f-7d04-4414-8c10-a8d4875a588f" width="220"/><br/>
+<img src=" https://github.com/user-attachments/assets/937f00e3-cf69-47b8-8e1b-1936e52fd968" width="220"/><br/>
 <b>Rich Note Editor</b>
 </td>
 
