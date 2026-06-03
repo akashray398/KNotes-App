@@ -17,6 +17,12 @@ KNotes follows the **Material You** guidelines, emphasizing personalization and 
 
 ---
 
+## Screenshots 
+<img width="745" height="1600" alt="WhatsApp Image 2026-06-03 at 21 32" src="https://github.com/user-attachments/assets/937f00e3-cf69-47b8-8e1b-1936e52fd968" />
+<img width="745" height="1600" alt="WhatsApp Image 2026-06-03 at 21 32 45" src="https://github.com/user-attachments/assets/a5df292f-7d04-4414-8c10-a8d4875a588f" />
+<img width="750" height="1600" alt="WhatsApp Image 2026-06-03 at 21" src="https://github.com/user-attachments/assets/2b406d10-1bfe-4d96-85dd-62ab7a8d9892" />
+
+
 ## 🛠 Tech Stack & Modern Tools
 
 | Layer | Technologies                                                  |
