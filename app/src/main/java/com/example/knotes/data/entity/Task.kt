@@ -13,6 +13,7 @@ data class Task(
     val reminderTime: Long? = null,
     val isCompleted: Boolean = false,
     val priority: Priority = Priority.MEDIUM,
+    val recurrence: Recurrence = Recurrence.NONE,
     val tags: List<String> = emptyList(),
     val color: Int = 0
 )

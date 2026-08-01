@@ -20,6 +20,32 @@ class SettingsManager @Inject constructor(
         val THEME_MODE = intPreferencesKey("theme_mode")
         val SORT_ORDER = stringPreferencesKey("sort_order")
         val FILTER_PRIORITY = stringPreferencesKey("filter_priority")
+        val CURRENT_STREAK = intPreferencesKey("current_streak")
+        val HIGHEST_STREAK = intPreferencesKey("highest_streak")
+        val LAST_STREAK_DATE = longPreferencesKey("last_streak_date")
+    }
+
+    val currentStreak: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[Keys.CURRENT_STREAK] ?: 0
+    }
+
+    val highestStreak: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[Keys.HIGHEST_STREAK] ?: 0
+    }
+
+    val lastStreakDate: Flow<Long> = context.dataStore.data.map { preferences ->
+        preferences[Keys.LAST_STREAK_DATE] ?: 0L
+    }
+
+    suspend fun updateStreak(streak: Int, date: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.CURRENT_STREAK] = streak
+            val currentHighest = preferences[Keys.HIGHEST_STREAK] ?: 0
+            if (streak > currentHighest) {
+                preferences[Keys.HIGHEST_STREAK] = streak
+            }
+            preferences[Keys.LAST_STREAK_DATE] = date
+        }
     }
 
     val themeMode: Flow<Int> = context.dataStore.data.map { preferences ->

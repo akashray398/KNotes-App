@@ -13,8 +13,29 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NotesViewModel @Inject constructor(
-    private val repository: NoteRepository
+    private val repository: NoteRepository,
+    private val taskRepository: com.example.knotes.data.repository.TaskRepository,
+    private val settingsManager: com.example.knotes.util.SettingsManager,
+    private val streakManager: com.example.knotes.util.StreakManager
 ) : ViewModel() {
+
+    private val _streakEvent = MutableSharedFlow<Int>()
+    val streakEvent = _streakEvent.asSharedFlow()
+
+    init {
+        viewModelScope.launch {
+            streakManager.validateStreak()
+            
+            // Watch for streak increases to trigger celebration
+            var lastStreak = settingsManager.currentStreak.first()
+            settingsManager.currentStreak.collect { current ->
+                if (current > lastStreak) {
+                    _streakEvent.emit(current)
+                }
+                lastStreak = current
+            }
+        }
+    }
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
@@ -62,6 +83,42 @@ class NotesViewModel @Inject constructor(
     val totalNotesCount = repository.getAllNotes().map { it.size }
         .stateIn(viewModelScope, SharingStarted.Lazily, 0)
 
+    private fun calculateStreak(notes: List<Note>): Int {
+        if (notes.isEmpty()) return 0
+        val dates = notes.map {
+            val cal = Calendar.getInstance()
+            cal.timeInMillis = it.timestamp
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+            cal.timeInMillis
+        }.distinct().sortedDescending()
+
+        var streakCount = 0
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        var checkDate = cal.timeInMillis
+
+        // If no note today, check if there was one yesterday to continue streak
+        if (!dates.contains(checkDate)) {
+            checkDate -= 24 * 60 * 60 * 1000
+        }
+
+        for (date in dates) {
+            if (date == checkDate) {
+                streakCount++
+                checkDate -= 24 * 60 * 60 * 1000
+            } else if (date < checkDate) {
+                break
+            }
+        }
+        return streakCount
+    }
+
     // Dashboard Statistics
     val weeklyStats = repository.getNotesSince(getStartOfWeek()).map { weeklyNotes ->
         val count = weeklyNotes.size
@@ -75,6 +132,79 @@ class NotesViewModel @Inject constructor(
         
         Triple(count, topTag, score)
     }.stateIn(viewModelScope, SharingStarted.Lazily, Triple(0, "None", 0))
+
+    val dashboardState = combine(
+        totalNotesCount,
+        taskRepository.getPendingTasksCount(),
+        taskRepository.getCompletedTodayCount(getStartOfDay()),
+        taskRepository.getDueTodayCount(getStartOfDay(), getEndOfDay()),
+        taskRepository.getOverdueCount(System.currentTimeMillis()),
+        settingsManager.currentStreak,
+        settingsManager.highestStreak,
+        repository.getArchivedCount(),
+        repository.getTrashedCount(),
+        taskRepository.getCompletedTasksSince(getStartOfWeek()),
+        taskRepository.getPendingTasksSince(getStartOfWeek())
+    ) { args ->
+        val totalNotes = args[0] as Int
+        val pending = args[1] as Int
+        val completedToday = args[2] as Int
+        val dueToday = args[3] as Int
+        val overdue = args[4] as Int
+        val streakCount = args[5] as Int
+        val highestStreak = args[6] as Int
+        val archivedCount = args[7] as Int
+        val trashedCount = args[8] as Int
+        val completedWeek = args[9] as Int
+        val pendingWeek = args[10] as Int
+        
+        val totalWeek = completedWeek + pendingWeek
+        val weeklyCompletion = if (totalWeek > 0) (completedWeek.toFloat() / totalWeek.toFloat() * 100).toInt() else 0
+
+        DashboardState(
+            totalNotes = totalNotes,
+            pendingTasks = pending,
+            completedTasks = completedToday,
+            dueToday = dueToday,
+            overdue = overdue,
+            streak = streakCount,
+            highestStreak = highestStreak,
+            archivedCount = archivedCount,
+            trashedCount = trashedCount,
+            weeklyCompletionRate = weeklyCompletion
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardState())
+
+    private fun getStartOfDay(): Long {
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        return cal.timeInMillis
+    }
+
+    private fun getEndOfDay(): Long {
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.HOUR_OF_DAY, 23)
+        cal.set(Calendar.MINUTE, 59)
+        cal.set(Calendar.SECOND, 59)
+        cal.set(Calendar.MILLISECOND, 999)
+        return cal.timeInMillis
+    }
+
+    data class DashboardState(
+        val totalNotes: Int = 0,
+        val pendingTasks: Int = 0,
+        val completedTasks: Int = 0,
+        val dueToday: Int = 0,
+        val overdue: Int = 0,
+        val streak: Int = 0,
+        val highestStreak: Int = 0,
+        val archivedCount: Int = 0,
+        val trashedCount: Int = 0,
+        val weeklyCompletionRate: Int = 0
+    )
 
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query

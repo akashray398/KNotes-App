@@ -16,7 +16,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.content.ContextCompat
 import com.example.knotes.R
+import com.example.knotes.ui.components.DashboardCompose
 import com.example.knotes.data.entity.Note
 import com.example.knotes.databinding.BottomSheetSortFilterBinding
 import com.example.knotes.databinding.FragmentNotesBinding
@@ -53,9 +58,35 @@ class NotesFragment : Fragment() {
         setupRecyclerViews()
         setupFab()
         setupSearch()
+        setupDashboard()
         setupToolbarActions()
         setupSwipeActions()
         observeViewModel()
+    }
+
+    private fun setupDashboard() {
+        binding.composeDashboard.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val state by viewModel.dashboardState.collectAsState()
+                DashboardCompose(
+                    state = state,
+                    onCardClick = { id ->
+                        when (id) {
+                            "pending", "completed", "due_today", "overdue" -> {
+                                findNavController().navigate(R.id.tasksFragment)
+                            }
+                            "archive" -> {
+                                findNavController().navigate(R.id.archiveFragment)
+                            }
+                            "trash" -> {
+                                findNavController().navigate(R.id.trashFragment)
+                            }
+                        }
+                    }
+                )
+            }
+        }
     }
 
     private fun setupSwipeActions() {
@@ -235,21 +266,28 @@ class NotesFragment : Fragment() {
                 }
 
                 launch {
-                    viewModel.weeklyStats.collect { stats ->
-                        binding.layoutDashboard.tvNotesThisWeek.text = stats.first.toString()
-                        binding.layoutDashboard.tvTopTag.text = if (stats.second == "None") "None" else "#${stats.second}"
-                        binding.layoutDashboard.tvProductivityScore.text = getString(R.string.percent_format, stats.third)
-                        binding.layoutDashboard.progressProductivity.progress = stats.third
-                    }
-                }
-
-                launch {
-                    viewModel.totalNotesCount.collectLatest { count ->
-                        binding.layoutDashboard.tvTotalNotes.text = count.toString()
+                    viewModel.streakEvent.collect { streak ->
+                        showStreakCelebration(streak)
                     }
                 }
             }
         }
+    }
+
+    private fun showStreakCelebration(streak: Int) {
+        val message = when (streak) {
+            3 -> "🔥 3 Day Streak! You're on fire!"
+            7 -> "🚀 7 Days! A full week of productivity!"
+            15 -> "⭐ 15 Days! You're becoming a master!"
+            30 -> "🏆 30 Days! Monthly Milestone Reached!"
+            100 -> "👑 100 DAYS! YOU ARE LEGENDARY!"
+            else -> "🔥 Daily Streak increased to $streak!"
+        }
+        
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
+            .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.purple_6750A4))
+            .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+            .show()
     }
 
     private fun updateTagFilters(notes: List<Note>) {

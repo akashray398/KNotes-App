@@ -28,6 +28,12 @@ interface NoteDao {
     @Query("DELETE FROM notes WHERE isTrashed = 1 AND deletedTimestamp <= :threshold")
     suspend fun deleteOldTrashedNotes(threshold: Long)
 
+    @Query("SELECT COUNT(*) FROM notes WHERE isArchived = 1 AND isTrashed = 0")
+    fun getArchivedCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM notes WHERE isTrashed = 1")
+    fun getTrashedCount(): Flow<Int>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNote(note: Note): Long
 

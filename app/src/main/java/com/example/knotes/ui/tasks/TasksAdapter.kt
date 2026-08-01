@@ -53,6 +53,7 @@ class TasksAdapter(
                 
                 ivCalendar.visibility = if (deadlineText.isEmpty()) View.GONE else View.VISIBLE
                 ivReminder.visibility = if (task.reminderTime != null) View.VISIBLE else View.GONE
+                ivRepeat.visibility = if (task.recurrence != com.example.knotes.data.entity.Recurrence.NONE) View.VISIBLE else View.GONE
                 
                 chipCategory.visibility = if (task.tags.isNotEmpty()) {
                     chipCategory.text = task.tags[0]

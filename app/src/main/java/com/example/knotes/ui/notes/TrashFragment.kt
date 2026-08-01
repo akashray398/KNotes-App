@@ -39,7 +39,7 @@ class TrashFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.layoutDashboard.root.visibility = View.GONE
+        binding.composeDashboard.visibility = View.GONE
         binding.fabAddNote.visibility = View.GONE
         binding.tvGreeting.text = getString(R.string.trash)
         binding.tvSubtitle.text = getString(R.string.trash_subtitle)

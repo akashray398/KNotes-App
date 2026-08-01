@@ -28,6 +28,10 @@ class NoteRepository @Inject constructor(
 
     fun getTrashedNotes(): Flow<List<Note>> = noteDao.getTrashedNotes()
 
+    fun getArchivedCount(): Flow<Int> = noteDao.getArchivedCount()
+
+    fun getTrashedCount(): Flow<Int> = noteDao.getTrashedCount()
+
     suspend fun moveToTrash(note: Note) {
         noteDao.updateNote(note.copy(isTrashed = true, deletedTimestamp = System.currentTimeMillis()))
     }

@@ -99,7 +99,7 @@
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                     android:textColor="?attr/colorSecondary"
                     android:textStyle="bold"
                     tools:text="#Work" />
@@ -112,7 +112,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Productivity -->
+        <!-- Productivity Score -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="100dp"
             android:layout_height="wrap_content"
@@ -126,20 +126,12 @@
                 android:gravity="center"
                 android:orientation="vertical"
                 android:padding="12dp">
-                <com.google.android.material.progressindicator.CircularProgressIndicator
-                    android:id="@+id/progress_productivity"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_marginBottom="4dp"
-                    app:indicatorSize="16dp"
-                    app:trackThickness="2dp"
-                    app:indicatorColor="?attr/colorPrimary"
-                    tools:progress="75" />
                 <TextView
                     android:id="@+id/tv_productivity_score"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    android:textColor="?attr/colorTertiary"
                     android:textStyle="bold"
                     tools:text="75%" />
                 <TextView
@@ -148,6 +140,18 @@
                     android:text="Score"
                     android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
                     android:alpha="0.7" />
+
+                <!-- Small indicator below if needed, but removed prominence to match others -->
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progress_productivity"
+                    android:layout_width="32dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    app:trackThickness="2dp"
+                    app:trackCornerRadius="2dp"
+                    app:indicatorColor="?attr/colorTertiary"
+                    app:trackColor="?attr/colorOutlineVariant"
+                    tools:progress="75" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

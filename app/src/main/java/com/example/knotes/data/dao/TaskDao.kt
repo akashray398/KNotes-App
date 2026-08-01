@@ -25,7 +25,7 @@ interface TaskDao {
     suspend fun getTaskById(id: Int): Task?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTask(task: Task)
+    suspend fun insertTask(task: Task): Long
 
     @Update
     suspend fun updateTask(task: Task)
@@ -41,4 +41,19 @@ interface TaskDao {
 
     @Query("SELECT COUNT(*) FROM tasks WHERE isCompleted = 0")
     fun getPendingTasksCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM tasks WHERE isCompleted = 1 AND deadline >= :startOfDay")
+    fun getCompletedTodayCount(startOfDay: Long): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM tasks WHERE isCompleted = 0 AND deadline >= :startOfDay AND deadline <= :endOfDay")
+    fun getDueTodayCount(startOfDay: Long, endOfDay: Long): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM tasks WHERE isCompleted = 0 AND deadline < :now")
+    fun getOverdueCount(now: Long): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM tasks WHERE isCompleted = 1 AND deadline >= :since")
+    fun getCompletedTasksSince(since: Long): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM tasks WHERE isCompleted = 0 AND deadline >= :since")
+    fun getPendingTasksSince(since: Long): Flow<Int>
 }

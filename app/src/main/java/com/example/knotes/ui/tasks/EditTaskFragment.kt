@@ -11,6 +11,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.example.knotes.data.entity.Recurrence
 import com.example.knotes.data.entity.Priority
 import com.example.knotes.data.entity.Task
 import com.example.knotes.databinding.FragmentEditTaskBinding
@@ -18,6 +19,7 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import com.example.knotes.util.TaskReminderManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -34,6 +36,9 @@ class EditTaskFragment : Fragment() {
     private var currentTask: Task? = null
     private var selectedDeadline: Long = System.currentTimeMillis()
     private var selectedReminder: Long? = null
+
+    @javax.inject.Inject
+    lateinit var taskReminderManager: com.example.knotes.util.TaskReminderManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -90,6 +95,13 @@ class EditTaskFragment : Fragment() {
                         Priority.MEDIUM -> binding.chipMedium.isChecked = true
                         Priority.HIGH -> binding.chipHigh.isChecked = true
                     }
+                    when (it.recurrence) {
+                        Recurrence.NONE -> binding.chipRepeatNone.isChecked = true
+                        Recurrence.DAILY -> binding.chipRepeatDaily.isChecked = true
+                        Recurrence.WEEKDAYS -> binding.chipRepeatWeekdays.isChecked = true
+                        Recurrence.WEEKLY -> binding.chipRepeatWeekly.isChecked = true
+                        else -> binding.chipRepeatNone.isChecked = true
+                    }
                     binding.buttonSave.text = "Update Task"
                     binding.toolbar.title = "Edit Task"
                 } ?: run {
@@ -138,29 +150,43 @@ class EditTaskFragment : Fragment() {
             else -> Priority.MEDIUM
         }
 
-        val task = currentTask?.copy(
+        val recurrence = when (binding.chipGroupRecurrence.checkedChipId) {
+            binding.chipRepeatDaily.id -> Recurrence.DAILY
+            binding.chipRepeatWeekdays.id -> Recurrence.WEEKDAYS
+            binding.chipRepeatWeekly.id -> Recurrence.WEEKLY
+            else -> Recurrence.NONE
+        }
+
+        val taskToSave = currentTask?.copy(
             title = title,
             deadline = selectedDeadline,
             priority = priority,
+            recurrence = recurrence,
             tags = tags,
             reminderTime = selectedReminder
         ) ?: Task(
             title = title,
             deadline = selectedDeadline,
             priority = priority,
+            recurrence = recurrence,
             tags = tags,
             reminderTime = selectedReminder
         )
 
-        try {
-            if (currentTask == null) {
-                viewModel.insertTask(task)
-            } else {
-                viewModel.updateTask(task)
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                if (currentTask == null) {
+                    val id = viewModel.insertTask(taskToSave)
+                    taskReminderManager.scheduleTaskReminders(taskToSave.copy(id = id.toInt()))
+                } else {
+                    viewModel.updateTask(taskToSave)
+                    taskReminderManager.cancelTaskReminders(taskToSave)
+                    taskReminderManager.scheduleTaskReminders(taskToSave)
+                }
+                findNavController().navigateUp()
+            } catch (e: Exception) {
+                Snackbar.make(binding.root, "Failed to save task", Snackbar.LENGTH_SHORT).show()
             }
-            findNavController().navigateUp()
-        } catch (e: Exception) {
-            Snackbar.make(binding.root, "Failed to save task", Snackbar.LENGTH_SHORT).show()
         }
     }
 

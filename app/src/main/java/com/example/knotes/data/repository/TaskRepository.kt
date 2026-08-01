@@ -19,7 +19,7 @@ class TaskRepository @Inject constructor(
 
     suspend fun getTaskById(id: Int): Task? = taskDao.getTaskById(id)
 
-    suspend fun insertTask(task: Task) = taskDao.insertTask(task)
+    suspend fun insertTask(task: Task): Long = taskDao.insertTask(task)
 
     suspend fun updateTask(task: Task) = taskDao.updateTask(task)
 
@@ -30,4 +30,14 @@ class TaskRepository @Inject constructor(
     fun getCompletedTasksCount(): Flow<Int> = taskDao.getCompletedTasksCount()
 
     fun getPendingTasksCount(): Flow<Int> = taskDao.getPendingTasksCount()
+
+    fun getCompletedTodayCount(startOfDay: Long): Flow<Int> = taskDao.getCompletedTodayCount(startOfDay)
+
+    fun getDueTodayCount(startOfDay: Long, endOfDay: Long): Flow<Int> = taskDao.getDueTodayCount(startOfDay, endOfDay)
+
+    fun getOverdueCount(now: Long): Flow<Int> = taskDao.getOverdueCount(now)
+
+    fun getCompletedTasksSince(since: Long): Flow<Int> = taskDao.getCompletedTasksSince(since)
+
+    fun getPendingTasksSince(since: Long): Flow<Int> = taskDao.getPendingTasksSince(since)
 }

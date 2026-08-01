@@ -10,7 +10,7 @@ import com.example.knotes.data.dao.TaskDao
 import com.example.knotes.data.entity.Note
 import com.example.knotes.data.entity.Task
 
-@Database(entities = [Note::class, Task::class], version = 3, exportSchema = false)
+@Database(entities = [Note::class, Task::class], version = 4, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class KNotesDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao

@@ -17,6 +17,16 @@ class Converters {
     }
 
     @TypeConverter
+    fun fromRecurrence(recurrence: com.example.knotes.data.entity.Recurrence): String {
+        return recurrence.name
+    }
+
+    @TypeConverter
+    fun toRecurrence(recurrence: String): com.example.knotes.data.entity.Recurrence {
+        return com.example.knotes.data.entity.Recurrence.valueOf(recurrence)
+    }
+
+    @TypeConverter
     fun fromStringList(value: List<String>): String {
         return Gson().toJson(value)
     }

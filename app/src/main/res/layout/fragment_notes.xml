@@ -90,9 +90,10 @@
             android:orientation="vertical"
             android:paddingBottom="80dp">
 
-            <include
-                android:id="@+id/layout_dashboard"
-                layout="@layout/layout_dashboard" />
+            <androidx.compose.ui.platform.ComposeView
+                android:id="@+id/compose_dashboard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
             <TextView
                 android:id="@+id/tv_pinned_header"
