@@ -82,6 +82,13 @@ KNotes embraces the principles of **Material You**, delivering a personalized an
 * Mark favorites for better organization
 * Archive notes without deleting them
 * Intelligent search and filtering
+* **Advanced Gestures**: Swipe to archive or trash notes
+
+### 🔥 Gamification & Motivation
+
+* **Daily Streak System**: Track your productivity and maintain your streak
+* **Milestone Celebrations**: Delightful animations when reaching goals
+* **Dynamic Dashboard**: Real-time statistics of your notes and tasks
 
 ### 🗑️ Advanced Recovery System
 
@@ -124,14 +131,15 @@ KNotes embraces the principles of **Material You**, delivering a personalized an
 
 | Layer                | Technology                        |
 | -------------------- | --------------------------------- |
-| Language             | Kotlin                            |
+| Language             | Kotlin (Coroutines + Flow)        |
 | Architecture         | MVVM + Clean Architecture         |
 | Dependency Injection | Hilt                              |
 | Database             | Room                              |
 | Cloud Services       | Firebase Auth + Firestore         |
 | Background Tasks     | WorkManager                       |
 | Preferences          | DataStore                         |
-| UI Framework         | Material 3 + ViewBinding          |
+| UI Framework         | Material 3 + Compose Hybrid       |
+| Animations           | Lottie + Material Motion          |
 | Security             | BiometricPrompt + Security Crypto |
 | Markdown Rendering   | Markwon                           |
 | Navigation           | Jetpack Navigation                |
