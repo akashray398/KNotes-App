@@ -54,7 +54,21 @@ class TasksFragment : Fragment() {
         setupFilters()
         setupToolbarActions()
         setupSwipeActions()
+        setupPullToRefresh()
         observeViewModel()
+    }
+
+    private fun setupPullToRefresh() {
+        binding.swipeRefreshTasks.apply {
+            setColorSchemeColors(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.purple_6750A4))
+            setOnRefreshListener {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    kotlinx.coroutines.delay(800)
+                    isRefreshing = false
+                    Toast.makeText(requireContext(), "Tasks updated", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     private fun setupRecyclerViews() {

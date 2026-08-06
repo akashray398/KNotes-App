@@ -3,8 +3,24 @@
     <string name="completed_tasks_count">Completed (%1$d)</string>
     <string name="tasks_summary">%1$d pending • %2$d completed today</string>
     <string name="percent_format">%1$d%%</string>
+    <string name="edited_label">Edited %1$s</string>
+    <string name="word_count">%1$d words</string>
     <string name="archive">Archive</string>
     <string name="archived_notes_subtitle">Your archived notes</string>
     <string name="trash">Trash</string>
     <string name="trash_subtitle">Notes are deleted after 30 days</string>
+
+    <!-- App Shortcuts -->
+    <string name="shortcut_new_note">New Note</string>
+    <string name="shortcut_new_note_long">Create a new note</string>
+    <string name="shortcut_new_task">New Task</string>
+    <string name="shortcut_new_task_long">Add a new task</string>
+    <string name="shortcut_trash">Trash</string>
+    <string name="shortcut_trash_long">View deleted notes</string>
+
+    <!-- Widget -->
+    <string name="widget_title">KNotes Quick View</string>
+    <string name="widget_empty_text">No pinned notes</string>
+    <string name="desc_app_logo">App Logo</string>
+    <string name="desc_add_note">Add Note</string>
 </resources>

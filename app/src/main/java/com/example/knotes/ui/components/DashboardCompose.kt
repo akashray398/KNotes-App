@@ -37,17 +37,21 @@ fun DashboardCompose(
     )
 
     val items: List<DashboardItem> = remember(state, animatedProductivity) {
+        val brandPurple = Color(0xFFD0BCFF)
+        val brandGold = Color(0xFFFFD54F)
+        val mutedWhite = Color(0xFFE6E1E5)
+
         listOf(
-            DashboardItem("Notes", state.totalNotes.toString(), Color(0xFF6750A4), R.drawable.ic_notes, "notes"),
-            DashboardItem("Streak", if (state.streak > 0) "🔥 ${state.streak}d" else "0d", Color(0xFFFF5722), R.drawable.ic_ai_assist, "streak"),
-            DashboardItem("Best", "${state.highestStreak}d", Color(0xFFFFC107), R.drawable.ic_ai_assist, "highest_streak"),
-            DashboardItem("Score", "$animatedProductivity%", Color(0xFFE91E63), R.drawable.ic_ai_assist, "score"),
-            DashboardItem("Done", state.completedTasks.toString(), Color(0xFF43A047), R.drawable.ic_tasks, "completed"),
-            DashboardItem("Pending", state.pendingTasks.toString(), Color(0xFF00ACC1), R.drawable.ic_tasks, "pending"),
-            DashboardItem("Due", state.dueToday.toString(), Color(0xFF1E88E5), R.drawable.ic_reminder, "due_today"),
-            DashboardItem("Overdue", state.overdue.toString(), Color(0xFFE53935), R.drawable.ic_reminder, "overdue"),
-            DashboardItem("Archived", state.archivedCount.toString(), Color(0xFF607D8B), R.drawable.ic_sort, "archive"),
-            DashboardItem("Trash", state.trashedCount.toString(), Color(0xFF9E9E9E), R.drawable.ic_back, "trash")
+            DashboardItem("Notes", state.totalNotes.toString(), brandPurple, R.drawable.ic_notes, "notes"),
+            DashboardItem("Streak", if (state.streak > 0) "🔥 ${state.streak}d" else "0d", brandGold, R.drawable.ic_ai_assist, "streak"),
+            DashboardItem("Best", "${state.highestStreak}d", brandGold, R.drawable.ic_ai_assist, "highest_streak"),
+            DashboardItem("Score", "$animatedProductivity%", brandGold, R.drawable.ic_ai_assist, "score"),
+            DashboardItem("Done", state.completedTasks.toString(), brandPurple, R.drawable.ic_tasks, "completed"),
+            DashboardItem("Pending", state.pendingTasks.toString(), mutedWhite, R.drawable.ic_tasks, "pending"),
+            DashboardItem("Due", state.dueToday.toString(), brandPurple, R.drawable.ic_reminder, "due_today"),
+            DashboardItem("Overdue", state.overdue.toString(), Color(0xFFF44336), R.drawable.ic_reminder, "overdue"),
+            DashboardItem("Archived", state.archivedCount.toString(), mutedWhite, R.drawable.ic_sort, "archive"),
+            DashboardItem("Trash", state.trashedCount.toString(), mutedWhite, R.drawable.ic_back, "trash")
         )
     }
 

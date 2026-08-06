@@ -325,6 +325,62 @@
                     app:icon="@drawable/ic_format_italic" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_color_text"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_format_color_text" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_color_fill"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_format_color_fill" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_font"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_format_font" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="24dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="?attr/colorOutlineVariant" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_align_left"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_format_align_left" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_align_center"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_format_align_center" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_align_right"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_format_align_right" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="24dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="?attr/colorOutlineVariant" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_list"
                     style="@style/Widget.Material3.Button.IconButton"
                     android:layout_width="wrap_content"

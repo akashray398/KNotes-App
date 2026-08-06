@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -19,16 +20,17 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.core.content.ContextCompat
 import com.example.knotes.R
 import com.example.knotes.ui.components.DashboardCompose
 import com.example.knotes.data.entity.Note
 import com.example.knotes.databinding.BottomSheetSortFilterBinding
 import com.example.knotes.databinding.FragmentNotesBinding
+import com.example.knotes.util.HapticHelper
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.chip.Chip
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -61,30 +63,19 @@ class NotesFragment : Fragment() {
         setupDashboard()
         setupToolbarActions()
         setupSwipeActions()
+        setupPullToRefresh()
         observeViewModel()
     }
 
-    private fun setupDashboard() {
-        binding.composeDashboard.apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                val state by viewModel.dashboardState.collectAsState()
-                DashboardCompose(
-                    state = state,
-                    onCardClick = { id ->
-                        when (id) {
-                            "pending", "completed", "due_today", "overdue" -> {
-                                findNavController().navigate(R.id.tasksFragment)
-                            }
-                            "archive" -> {
-                                findNavController().navigate(R.id.archiveFragment)
-                            }
-                            "trash" -> {
-                                findNavController().navigate(R.id.trashFragment)
-                            }
-                        }
-                    }
-                )
+    private fun setupPullToRefresh() {
+        binding.swipeRefreshNotes.apply {
+            setColorSchemeColors(ContextCompat.getColor(requireContext(), R.color.purple_6750A4))
+            setOnRefreshListener {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    delay(800)
+                    isRefreshing = false
+                    Toast.makeText(requireContext(), "Notes updated", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -98,11 +89,13 @@ class NotesFragment : Fragment() {
                 val note = adapter.currentList[position]
                 
                 if (direction == ItemTouchHelper.LEFT) {
+                    HapticHelper.warning(binding.root)
                     viewModel.moveToTrash(note)
                     showUndoSnackbar("Note moved to trash") {
                         viewModel.restoreFromTrash(note)
                     }
                 } else if (direction == ItemTouchHelper.RIGHT) {
+                    HapticHelper.lightTick(binding.root)
                     viewModel.archiveNote(note)
                     showUndoSnackbar("Note archived") {
                         viewModel.unarchiveNote(note)
@@ -170,9 +163,11 @@ class NotesFragment : Fragment() {
 
     private fun setupFab() {
         binding.fabAddNote.setOnClickListener {
+            HapticHelper.lightTick(it)
             navigateEditNote(-1)
         }
         binding.btnCreateFirstNote.setOnClickListener {
+            HapticHelper.lightTick(it)
             navigateEditNote(-1)
         }
     }
@@ -190,6 +185,31 @@ class NotesFragment : Fragment() {
                 viewModel.updateSearchQuery(s?.toString() ?: "")
             }
         })
+    }
+
+    private fun setupDashboard() {
+        binding.composeDashboard.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val state by viewModel.dashboardState.collectAsState()
+                DashboardCompose(
+                    state = state,
+                    onCardClick = { id ->
+                        when (id) {
+                            "pending", "completed", "due_today", "overdue" -> {
+                                findNavController().navigate(R.id.tasksFragment)
+                            }
+                            "archive" -> {
+                                findNavController().navigate(R.id.archiveFragment)
+                            }
+                            "trash" -> {
+                                findNavController().navigate(R.id.trashFragment)
+                            }
+                        }
+                    }
+                )
+            }
+        }
     }
 
     private fun setupToolbarActions() {
@@ -258,7 +278,13 @@ class NotesFragment : Fragment() {
                         binding.recyclerViewPinned.visibility = if (hasPinned && isSearchEmpty) View.VISIBLE else View.GONE
                         binding.tvOthersHeader.visibility = if (hasPinned && others.isNotEmpty() && isSearchEmpty) View.VISIBLE else View.GONE
                         
-                        binding.layoutEmptyState.visibility = if (notes.isEmpty() && isSearchEmpty) View.VISIBLE else View.GONE
+                        if (notes.isEmpty() && isSearchEmpty) {
+                            binding.layoutEmptyState.visibility = View.VISIBLE
+                            startEmptyStateAnimation()
+                        } else {
+                            binding.layoutEmptyState.visibility = View.GONE
+                        }
+                        
                         binding.recyclerViewNotes.visibility = if (others.isNotEmpty() || !isSearchEmpty) View.VISIBLE else View.GONE
                         
                         updateTagFilters(notes)
@@ -272,6 +298,23 @@ class NotesFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun startEmptyStateAnimation() {
+        val illustration = binding.layoutEmptyState.findViewById<View>(R.id.iv_empty_illustration)
+        illustration?.animate()
+            ?.scaleX(1.05f)
+            ?.scaleY(1.05f)
+            ?.setDuration(1500)
+            ?.withEndAction {
+                illustration.animate()
+                    ?.scaleX(1f)
+                    ?.scaleY(1f)
+                    ?.setDuration(1500)
+                    ?.withEndAction { startEmptyStateAnimation() }
+                    ?.start()
+            }
+            ?.start()
     }
 
     private fun showStreakCelebration(streak: Int) {

@@ -29,6 +29,27 @@ class NoteWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_title, pendingIntent)
 
+            // Intent for Add Note button
+            val addNoteIntent = Intent(context, MainActivity::class.java).apply {
+                putExtra("navigate_to", "new_note")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            val addNotePendingIntent = PendingIntent.getActivity(
+                context, 1, addNoteIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.btn_add_note, addNotePendingIntent)
+
+            // Template for list items
+            val clickIntent = Intent(context, MainActivity::class.java).apply {
+                action = "ACTION_OPEN_NOTE"
+            }
+            val clickPendingIntent = PendingIntent.getActivity(
+                context, 2, clickIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setPendingIntentTemplate(R.id.widget_list, clickPendingIntent)
+
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
         super.onUpdate(context, appWidgetManager, appWidgetIds)

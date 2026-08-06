@@ -5,16 +5,26 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.text.Html
+import android.text.Layout
+import android.text.Spannable
+import android.text.style.AlignmentSpan
+import android.text.style.BackgroundColorSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
+import android.text.style.TypefaceSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.widget.PopupMenu
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -31,6 +41,7 @@ import com.example.knotes.databinding.FragmentEditNoteBinding
 import com.example.knotes.ui.tasks.TasksViewModel
 import com.example.knotes.util.ReminderManager
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
@@ -56,6 +67,8 @@ class EditNoteFragment : Fragment() {
     
     private var isFavorite = false
     private var autoSaveJob: Job? = null
+    
+    private val undoStack = mutableListOf<String>()
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -105,7 +118,7 @@ class EditNoteFragment : Fragment() {
         }
 
         binding.btnPin.setOnClickListener {
-            // Toggle pin logic
+            // Pin logic handled in NotesFragment mostly, but can toggle here
             triggerAutoSave()
         }
 
@@ -140,30 +153,118 @@ class EditNoteFragment : Fragment() {
     }
 
     private fun setupFormattingToolbar() {
-        binding.btnBold.setOnClickListener { insertFormatting("**", "**") }
-        binding.btnItalic.setOnClickListener { insertFormatting("_", "_") }
-        binding.btnList.setOnClickListener { insertFormatting("\n- ", "") }
-        binding.btnChecklist.setOnClickListener { insertFormatting("\n- [ ] ", "") }
+        binding.btnBold.setOnClickListener { pushToUndo(); toggleStyleSpan(Typeface.BOLD) }
+        binding.btnItalic.setOnClickListener { pushToUndo(); toggleStyleSpan(Typeface.ITALIC) }
+        binding.btnColorText.setOnClickListener { showColorPicker { color -> pushToUndo(); applySpan(ForegroundColorSpan(color)) } }
+        binding.btnColorFill.setOnClickListener { showColorPicker { color -> pushToUndo(); applySpan(BackgroundColorSpan(color)) } }
+        binding.btnFont.setOnClickListener { showFontPicker() }
+        
+        binding.btnAlignLeft.setOnClickListener { pushToUndo(); applyAlignment(Layout.Alignment.ALIGN_NORMAL) }
+        binding.btnAlignCenter.setOnClickListener { pushToUndo(); applyAlignment(Layout.Alignment.ALIGN_CENTER) }
+        binding.btnAlignRight.setOnClickListener { pushToUndo(); applyAlignment(Layout.Alignment.ALIGN_OPPOSITE) }
+        
+        binding.btnList.setOnClickListener { pushToUndo(); insertMarkdown("- ") }
+        binding.btnChecklist.setOnClickListener { pushToUndo(); insertMarkdown("- [ ] ") }
+        binding.btnUndo.setOnClickListener { performUndo() }
         binding.btnMic.setOnClickListener { checkAudioPermission() }
     }
 
-    private fun insertFormatting(prefix: String, suffix: String) {
+    private fun toggleStyleSpan(style: Int) {
         val start = binding.editTextDescription.selectionStart
         val end = binding.editTextDescription.selectionEnd
-        val text = binding.editTextDescription.text
-        
-        if (start != -1 && end != -1) {
-            val selectedText = text.substring(start, end)
-            val replacement = "$prefix$selectedText$suffix"
-            text.replace(start, end, replacement)
-            binding.editTextDescription.setSelection(start + prefix.length, start + prefix.length + selectedText.length)
+        if (start == -1 || end == -1 || start == end) return
+
+        val spannable = binding.editTextDescription.text
+        val spans = spannable.getSpans(start, end, StyleSpan::class.java)
+        var exists = false
+        for (span in spans) {
+            if (span.style == style) {
+                spannable.removeSpan(span)
+                exists = true
+            }
         }
+        if (!exists) {
+            spannable.setSpan(StyleSpan(style), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+    }
+
+    private fun applySpan(span: Any) {
+        val start = binding.editTextDescription.selectionStart
+        val end = binding.editTextDescription.selectionEnd
+        if (start == -1 || end == -1 || start == end) return
+        binding.editTextDescription.text.setSpan(span, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    }
+
+    private fun applyAlignment(alignment: Layout.Alignment) {
+        val start = binding.editTextDescription.selectionStart
+        val end = binding.editTextDescription.selectionEnd
+        if (start == -1 || end == -1) return
+        
+        val spannable = binding.editTextDescription.text
+        spannable.setSpan(
+            AlignmentSpan.Standard(alignment),
+            start, end,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        Snackbar.make(binding.root, "Alignment applied", Snackbar.LENGTH_SHORT).show()
+    }
+
+    private fun insertMarkdown(prefix: String) {
+        val start = binding.editTextDescription.selectionStart
+        val text = binding.editTextDescription.text
+        if (start != -1) {
+            text.insert(start, prefix)
+        }
+    }
+
+    private fun pushToUndo() {
+        val currentHtml = Html.toHtml(binding.editTextDescription.text, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE)
+        if (undoStack.isEmpty() || undoStack.last() != currentHtml) {
+            undoStack.add(currentHtml)
+            if (undoStack.size > 20) undoStack.removeAt(0)
+        }
+    }
+
+    private fun performUndo() {
+        if (undoStack.isNotEmpty()) {
+            val lastState = undoStack.removeAt(undoStack.size - 1)
+            binding.editTextDescription.setText(Html.fromHtml(lastState, Html.FROM_HTML_MODE_COMPACT))
+            Snackbar.make(binding.root, "Undo successful", Snackbar.LENGTH_SHORT).show()
+        } else {
+            Snackbar.make(binding.root, "Nothing to undo", Snackbar.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showColorPicker(onColorSelected: (Int) -> Unit) {
+        val colors = intArrayOf(
+            Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.MAGENTA, Color.CYAN,
+            Color.BLACK, Color.WHITE, Color.GRAY, Color.DKGRAY,
+            MaterialColors.getColor(requireContext(), androidx.appcompat.R.attr.colorPrimary, Color.MAGENTA)
+        )
+        val colorNames = arrayOf("Red", "Blue", "Green", "Yellow", "Magenta", "Cyan", "Black", "White", "Gray", "Dark Gray", "Theme Primary")
+        
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Select Color")
+            .setItems(colorNames) { _, which ->
+                onColorSelected(colors[which])
+            }
+            .show()
+    }
+
+    private fun showFontPicker() {
+        val fonts = arrayOf("monospace", "serif", "sans-serif", "cursive")
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Select Font")
+            .setItems(fonts) { _, which ->
+                applySpan(TypefaceSpan(fonts[which]))
+            }
+            .show()
     }
 
     private fun updateMetadata() {
         val content = binding.editTextDescription.text.toString()
         val wordCount = if (content.isBlank()) 0 else content.trim().split("\\s+".toRegex()).size
-        binding.tvWordCount.text = "$wordCount words"
+        binding.tvWordCount.text = getString(R.string.word_count, wordCount)
         
         val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
         binding.tvDate.text = sdf.format(System.currentTimeMillis())
@@ -194,7 +295,9 @@ class EditNoteFragment : Fragment() {
                 currentNote = viewModel.getNoteById(noteId)
                 currentNote?.let {
                     binding.editTextTitle.setText(it.title)
-                    binding.editTextDescription.setText(it.description)
+                    binding.editTextDescription.setText(
+                        Html.fromHtml(it.description, Html.FROM_HTML_MODE_COMPACT)
+                    )
                     binding.editTextTags.setText(it.tags.joinToString(", "))
                     isFavorite = it.isFavorite
                     updateFavoriteIcon()
@@ -254,7 +357,33 @@ class EditNoteFragment : Fragment() {
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 if (!matches.isNullOrEmpty()) {
                     val text = matches[0]
-                    binding.editTextDescription.append(" $text")
+                    when {
+                        text.lowercase().contains("set title") -> {
+                            val title = text.lowercase().substringAfter("set title").trim()
+                                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                            binding.editTextTitle.setText(title)
+                            Snackbar.make(binding.root, "Title set from voice", Snackbar.LENGTH_SHORT).show()
+                        }
+                        text.lowercase().contains("add tag") -> {
+                            val tag = text.lowercase().substringAfter("add tag").trim()
+                            val currentTags = binding.editTextTags.text.toString()
+                            val newTags = if (currentTags.isBlank()) tag else "$currentTags, $tag"
+                            binding.editTextTags.setText(newTags)
+                            Snackbar.make(binding.root, "Tag added from voice", Snackbar.LENGTH_SHORT).show()
+                        }
+                        text.lowercase().contains("set reminder") -> {
+                            reminderCalendar = Calendar.getInstance().apply {
+                                add(Calendar.DAY_OF_YEAR, 1)
+                                set(Calendar.HOUR_OF_DAY, 9)
+                                set(Calendar.MINUTE, 0)
+                            }
+                            updateReminderButtonText()
+                            Snackbar.make(binding.root, "Reminder set for tomorrow 9 AM via voice", Snackbar.LENGTH_LONG).show()
+                        }
+                        else -> {
+                            binding.editTextDescription.append(" $text")
+                        }
+                    }
                 }
             }
             override fun onPartialResults(partialResults: Bundle?) {}
@@ -296,6 +425,11 @@ class EditNoteFragment : Fragment() {
         val bottomSheetBinding = BottomSheetAiAssistBinding.inflate(layoutInflater)
         dialog.setContentView(bottomSheetBinding.root)
 
+        bottomSheetBinding.cardFullSuggestion.setOnClickListener {
+            aiFullSuggestion()
+            dialog.dismiss()
+        }
+
         bottomSheetBinding.cardAutoTitle.setOnClickListener {
             autoGenerateTitle()
             dialog.dismiss()
@@ -327,6 +461,46 @@ class EditNoteFragment : Fragment() {
         }
 
         dialog.show()
+    }
+
+    private fun aiFullSuggestion() {
+        val currentTitle = binding.editTextTitle.text.toString()
+        val currentContent = binding.editTextDescription.text.toString()
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            val snackbar = Snackbar.make(binding.root, "AI is analyzing...", Snackbar.LENGTH_INDEFINITE)
+            snackbar.show()
+            delay(1500)
+
+            if (currentContent.isBlank() && currentTitle.isNotBlank()) {
+                val suggestion = when {
+                    currentTitle.lowercase().contains("meeting") -> "• Objective: \n• Attendees: \n• Discussion Points: \n• Action Items: "
+                    currentTitle.lowercase().contains("shopping") -> "• Groceries: \n• Household items: \n• Electronics: "
+                    currentTitle.lowercase().contains("project") -> "• Overview: \n• Roadmap: \n• Dependencies: \n• Deadline: "
+                    else -> "Start by detailing your thoughts on $currentTitle..."
+                }
+                binding.editTextDescription.setText(suggestion)
+            } else if (currentContent.isNotBlank()) {
+                if (currentTitle.isBlank()) {
+                    val firstLine = currentContent.lines().firstOrNull { it.isNotBlank() } ?: "Untitled"
+                    binding.editTextTitle.setText(firstLine.take(30).trim())
+                }
+
+                val words = currentContent.split("\\s+".toRegex()).filter { it.length > 5 }.take(3)
+                    .map { it.lowercase().filter { c -> c.isLetterOrDigit() } }
+                val newTags = words.joinToString(", ")
+                if (binding.editTextTags.text.isNullOrBlank()) {
+                    binding.editTextTags.setText(newTags)
+                }
+            } else {
+                binding.editTextTitle.setText("Daily Journal")
+                binding.editTextDescription.setText("Today was a productive day. I achieved...")
+                binding.editTextTags.setText("Journal, Thoughts")
+            }
+
+            snackbar.dismiss()
+            Snackbar.make(binding.root, "AI Suggestions applied!", Snackbar.LENGTH_SHORT).show()
+        }
     }
 
     private fun autoGenerateTitle() {
@@ -420,7 +594,8 @@ class EditNoteFragment : Fragment() {
 
     private fun saveNote(navigateUp: Boolean) {
         val title = binding.editTextTitle.text.toString().trim()
-        val description = binding.editTextDescription.text.toString().trim()
+        val descriptionSpannable = binding.editTextDescription.text
+        val description = Html.toHtml(descriptionSpannable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE)
         val tagsString = binding.editTextTags.text.toString().trim()
         val tags = if (tagsString.isEmpty()) emptyList() else tagsString.split(",").map { it.trim().removePrefix("#") }
         
@@ -430,7 +605,7 @@ class EditNoteFragment : Fragment() {
             else -> Priority.MEDIUM
         }
 
-        if (title.isEmpty() && description.isEmpty()) return
+        if (title.isEmpty() && descriptionSpannable.isEmpty()) return
 
         val note = currentNote?.copy(
             title = if (title.isEmpty()) "Untitled" else title,

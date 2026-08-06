@@ -17,6 +17,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@drawable/splash_glow"
+            android:backgroundTint="#0A6750A4"
             android:paddingHorizontal="16dp"
             android:paddingTop="16dp">
 
@@ -78,17 +80,22 @@
             tools:listitem="@layout/item_note" />
     </com.google.android.material.search.SearchView>
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/nested_scroll_view"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh_notes"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nested_scroll_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="80dp">
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="80dp">
 
             <androidx.compose.ui.platform.ComposeView
                 android:id="@+id/compose_dashboard"
@@ -168,6 +175,7 @@
                 tools:visibility="visible">
 
                 <ImageView
+                    android:id="@+id/iv_empty_illustration"
                     android:layout_width="160dp"
                     android:layout_height="160dp"
                     android:src="@drawable/ic_app_logo"
@@ -201,6 +209,7 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fab_add_note"
@@ -210,6 +219,9 @@
         android:layout_margin="16dp"
         android:text="New Note"
         app:icon="@drawable/ic_notes"
+        android:textColor="?attr/colorOnPrimaryContainer"
+        app:iconTint="?attr/colorOnPrimaryContainer"
+        app:backgroundTint="?attr/colorPrimaryContainer"
         app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

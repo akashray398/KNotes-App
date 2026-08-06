@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="new_note"
+        android:enabled="true"
+        android:icon="@drawable/ic_add"
+        android:shortcutShortLabel="@string/shortcut_new_note"
+        android:shortcutLongLabel="@string/shortcut_new_note_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.example.knotes"
+            android:targetClass="com.example.knotes.MainActivity">
+            <extra android:name="navigate_to" android:value="new_note" />
+        </intent>
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="new_task"
+        android:enabled="true"
+        android:icon="@drawable/ic_tasks"
+        android:shortcutShortLabel="@string/shortcut_new_task"
+        android:shortcutLongLabel="@string/shortcut_new_task_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.example.knotes"
+            android:targetClass="com.example.knotes.MainActivity">
+            <extra android:name="navigate_to" android:value="new_task" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="view_trash"
+        android:enabled="true"
+        android:icon="@drawable/ic_back"
+        android:shortcutShortLabel="@string/shortcut_trash"
+        android:shortcutLongLabel="@string/shortcut_trash_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.example.knotes"
+            android:targetClass="com.example.knotes.MainActivity">
+            <extra android:name="navigate_to" android:value="trash" />
+        </intent>
+    </shortcut>
+</shortcuts>

@@ -1,24 +1,48 @@
 package com.example.knotes.data.repository
 
+import android.content.Context
+import android.content.Intent
 import com.example.knotes.data.dao.NoteDao
 import com.example.knotes.data.entity.Note
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class NoteRepository @Inject constructor(
-    private val noteDao: NoteDao
+    private val noteDao: NoteDao,
+    @ApplicationContext private val context: Context
 ) {
     fun getAllNotes(): Flow<List<Note>> = noteDao.getAllNotes()
 
     fun searchNotes(query: String): Flow<List<Note>> = noteDao.searchNotes(query)
 
-    suspend fun insertNote(note: Note): Long = noteDao.insertNote(note)
+    suspend fun insertNote(note: Note): Long {
+        val id = noteDao.insertNote(note)
+        updateWidget()
+        return id
+    }
 
-    suspend fun updateNote(note: Note) = noteDao.updateNote(note)
+    suspend fun updateNote(note: Note) {
+        noteDao.updateNote(note)
+        updateWidget()
+    }
 
-    suspend fun deleteNote(note: Note) = noteDao.deleteNote(note)
+    private fun updateWidget() {
+        val intent = Intent(context, com.example.knotes.widget.NoteWidgetProvider::class.java).apply {
+            action = android.appwidget.AppWidgetManager.ACTION_APPWIDGET_UPDATE
+        }
+        val ids = android.appwidget.AppWidgetManager.getInstance(context)
+            .getAppWidgetIds(android.content.ComponentName(context, com.example.knotes.widget.NoteWidgetProvider::class.java))
+        intent.putExtra(android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        context.sendBroadcast(intent)
+    }
+
+    suspend fun deleteNote(note: Note) {
+        noteDao.deleteNote(note)
+        updateWidget()
+    }
 
     suspend fun getNoteById(id: Int): Note? = noteDao.getNoteById(id)
     

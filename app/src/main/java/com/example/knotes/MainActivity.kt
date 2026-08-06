@@ -1,3 +1,5 @@
+package com.example.knotes
+
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -12,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.color.DynamicColors
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
@@ -40,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
         
         enableEdgeToEdge()
@@ -84,9 +88,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
+        if (intent?.action == "ACTION_OPEN_NOTE") {
+            val noteId = intent.getIntExtra("noteId", -1)
+            val bundle = Bundle().apply { putInt("noteId", noteId) }
+            navController.navigate(R.id.editNoteFragment, bundle)
+            return
+        }
+
         intent?.getStringExtra("navigate_to")?.let { target ->
-            if (target == "tasks") {
-                navController.navigate(R.id.tasksFragment)
+            when (target) {
+                "tasks" -> navController.navigate(R.id.tasksFragment)
+                "trash" -> navController.navigate(R.id.trashFragment)
+                "new_note" -> {
+                    val bundle = Bundle().apply { putInt("noteId", -1) }
+                    navController.navigate(R.id.editNoteFragment, bundle)
+                }
+                "new_task" -> {
+                    val bundle = Bundle().apply { putInt("taskId", -1) }
+                    navController.navigate(R.id.editTaskFragment, bundle)
+                }
             }
         }
     }

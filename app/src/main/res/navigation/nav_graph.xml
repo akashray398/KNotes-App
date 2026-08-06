@@ -35,7 +35,6 @@
         tools:layout="@layout/fragment_edit_note">
         <argument
             android:name="noteId"
-            android:defaultValue="-1"
             app:argType="integer" />
     </fragment>
 
@@ -46,7 +45,6 @@
         tools:layout="@layout/fragment_edit_task">
         <argument
             android:name="taskId"
-            android:defaultValue="-1"
             app:argType="integer" />
     </fragment>
 
@@ -78,4 +76,5 @@
         android:name="com.example.knotes.ui.notes.TrashFragment"
         android:label="Trash"
         tools:layout="@layout/fragment_notes" />
+
 </navigation>

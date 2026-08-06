@@ -83,8 +83,14 @@ class TasksAdapter(
                     ContextCompat.getColor(root.context, priorityColor)
                 )
 
-                root.setOnClickListener { onTaskClick(task) }
-                checkBoxCompleted.setOnClickListener { onTaskCheckedChange(task) }
+                root.setOnClickListener { 
+                    com.example.knotes.util.HapticHelper.lightTick(it)
+                    onTaskClick(task) 
+                }
+                checkBoxCompleted.setOnClickListener { 
+                    com.example.knotes.util.HapticHelper.success(it)
+                    onTaskCheckedChange(task) 
+                }
             }
         }
 

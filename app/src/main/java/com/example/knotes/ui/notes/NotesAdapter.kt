@@ -38,8 +38,12 @@ class NotesAdapter(
         fun bind(note: Note) {
             binding.apply {
                 textViewTitle.text = note.title
-                textViewDescription.text = note.description
-                textViewTimestamp.text = "Edited ${formatDate(note.timestamp)}"
+                
+                // Parse HTML for the preview
+                val descriptionSpannable = android.text.Html.fromHtml(note.description, android.text.Html.FROM_HTML_MODE_COMPACT)
+                textViewDescription.text = descriptionSpannable
+
+                textViewTimestamp.text = root.context.getString(R.string.edited_label, formatDate(note.timestamp))
                 
                 imageViewPin.visibility = if (note.isPinned) View.VISIBLE else View.GONE
                 ivFavorite.visibility = if (note.isFavorite) View.VISIBLE else View.GONE
@@ -74,9 +78,18 @@ class NotesAdapter(
                     chipGroupTags.addView(chip)
                 }
 
-                root.setOnClickListener { onNoteClick(note) }
-                imageViewPin.setOnClickListener { onPinClick(note) }
-                ivFavorite.setOnClickListener { onFavoriteClick?.invoke(note) }
+                root.setOnClickListener { 
+                    com.example.knotes.util.HapticHelper.lightTick(it)
+                    onNoteClick(note) 
+                }
+                imageViewPin.setOnClickListener { 
+                    com.example.knotes.util.HapticHelper.lightTick(it)
+                    onPinClick(note) 
+                }
+                ivFavorite.setOnClickListener { 
+                    com.example.knotes.util.HapticHelper.lightTick(it)
+                    onFavoriteClick?.invoke(note) 
+                }
             }
         }
 

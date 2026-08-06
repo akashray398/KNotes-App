@@ -21,10 +21,9 @@ class NoteWidgetRemoteViewsFactory(private val context: Context) : RemoteViewsSe
     override fun onCreate() {}
 
     override fun onDataSetChanged() {
-        // This is a simplified version. In a real app, use a Repository.
         val db = KNotesDatabase.getDatabase(context)
         pinnedNotes = runBlocking {
-            db.noteDao().getPinnedNotesSync() // Need to add this to DAO
+            db.noteDao().getPinnedNotesSync()
         }
     }
 

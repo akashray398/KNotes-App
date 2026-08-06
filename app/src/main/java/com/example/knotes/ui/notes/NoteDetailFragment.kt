@@ -1,6 +1,7 @@
 package com.example.knotes.ui.notes
 
 import android.os.Bundle
+import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +15,6 @@ import com.example.knotes.data.entity.Note
 import com.example.knotes.databinding.FragmentNoteDetailBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import io.noties.markwon.Markwon
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -29,8 +29,6 @@ class NoteDetailFragment : Fragment() {
     private val viewModel: NotesViewModel by viewModels()
     private val args: NoteDetailFragmentArgs by navArgs()
     private var currentNote: Note? = null
-    
-    private lateinit var markwon: Markwon
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,8 +41,6 @@ class NoteDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        markwon = Markwon.create(requireContext())
-
         setupToolbar()
         loadNote()
 
@@ -85,7 +81,7 @@ class NoteDetailFragment : Fragment() {
 
     private fun displayNote(note: Note) {
         binding.tvTitle.text = note.title
-        markwon.setMarkdown(binding.tvContent, note.description)
+        binding.tvContent.text = Html.fromHtml(note.description, Html.FROM_HTML_MODE_COMPACT)
         
         val sdf = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
         var meta = "Last updated: ${sdf.format(Date(note.timestamp))}"
