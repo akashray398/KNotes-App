@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.knotes.R
+import com.example.knotes.domain.model.Note
 import com.example.knotes.databinding.FragmentNotesBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -60,15 +61,27 @@ class TrashFragment : Fragment() {
         binding.recyclerViewNotes.layoutManager = LinearLayoutManager(requireContext())
     }
 
-    private fun showTrashOptions(note: com.example.knotes.data.entity.Note) {
+    private fun showTrashOptions(note: Note) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Trash Options")
             .setItems(arrayOf("Restore", "Delete Permanently")) { _, which ->
                 when (which) {
                     0 -> viewModel.restoreFromTrash(note)
-                    1 -> viewModel.deletePermanently(note)
+                    1 -> confirmDeletePermanently(note)
                 }
             }
+            .show()
+    }
+
+    private fun confirmDeletePermanently(note: Note) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Delete Permanently?")
+            .setMessage("This action cannot be undone.")
+            .setPositiveButton("Delete") { _, _ ->
+                viewModel.deletePermanently(note)
+                Snackbar.make(binding.root, "Note deleted permanently", Snackbar.LENGTH_LONG).show()
+            }
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
@@ -84,8 +97,8 @@ class TrashFragment : Fragment() {
                     viewModel.restoreFromTrash(note)
                     Snackbar.make(binding.root, "Note restored", Snackbar.LENGTH_LONG).show()
                 } else if (direction == ItemTouchHelper.LEFT) {
-                    viewModel.deletePermanently(note)
-                    Snackbar.make(binding.root, "Note deleted permanently", Snackbar.LENGTH_LONG).show()
+                    confirmDeletePermanently(note)
+                    adapter.notifyItemChanged(position)
                 }
             }
         }

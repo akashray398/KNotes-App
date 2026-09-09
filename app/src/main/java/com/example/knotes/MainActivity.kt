@@ -20,10 +20,16 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.example.knotes.databinding.ActivityMainBinding
 import com.example.knotes.util.SettingsManager
+import com.example.knotes.data.repository.SyncRepository
+import com.example.knotes.ui.components.OnboardingScreen
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ViewCompositionStrategy
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -33,6 +39,13 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var settingsManager: SettingsManager
+
+    @Inject
+    lateinit var syncRepository: SyncRepository
+
+    @Inject
+    @JvmField
+    var auth: FirebaseAuth? = null
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -52,11 +65,15 @@ class MainActivity : AppCompatActivity() {
 
         checkNotificationPermission()
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
+            // Only apply side insets and top padding if needed. 
+            // Bottom navigation and AppBarLayout should handle their own insets.
+            v.setPadding(systemBars.left, 0, systemBars.right, 0)
             insets
         }
+
+        setupOnboarding()
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -65,6 +82,7 @@ class MainActivity : AppCompatActivity() {
         binding.bottomNavigation.setupWithNavController(navController)
         binding.navigationView.setupWithNavController(navController)
 
+        observeAuthState()
         handleIntent(intent)
 
         // Custom handling for theme only
@@ -72,6 +90,15 @@ class MainActivity : AppCompatActivity() {
             showThemeDialog()
             binding.drawerLayout.closeDrawers()
             true
+        }
+    }
+
+    private fun observeAuthState() {
+        auth?.addAuthStateListener { firebaseAuth ->
+            if (firebaseAuth.currentUser != null) {
+                syncRepository.startSync()
+                Toast.makeText(this, "Cloud Sync Active", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -114,6 +141,24 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleIntent(intent)
+    }
+
+    private fun setupOnboarding() {
+        binding.composeOnboarding.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val onboardingCompleted by settingsManager.onboardingCompleted.collectAsState(initial = true)
+                if (!onboardingCompleted) {
+                    OnboardingScreen(
+                        onFinished = {
+                            lifecycleScope.launch {
+                                settingsManager.setOnboardingCompleted(true)
+                            }
+                        }
+                    )
+                }
+            }
+        }
     }
 
     private fun showThemeDialog() {

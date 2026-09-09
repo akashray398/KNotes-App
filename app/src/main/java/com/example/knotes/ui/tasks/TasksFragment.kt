@@ -17,7 +17,8 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.knotes.R
-import com.example.knotes.data.entity.Priority
+import com.example.knotes.domain.model.Priority
+import com.example.knotes.domain.model.Task
 import com.example.knotes.databinding.FragmentTasksBinding
 import com.google.android.material.chip.Chip
 import dagger.hilt.android.AndroidEntryPoint
@@ -48,6 +49,7 @@ class TasksFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        checkPermissions()
         setupRecyclerViews()
         setupFab()
         setupSearch()
@@ -56,6 +58,26 @@ class TasksFragment : Fragment() {
         setupSwipeActions()
         setupPullToRefresh()
         observeViewModel()
+    }
+
+    private fun checkPermissions() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (!isGranted) {
+            Toast.makeText(requireContext(), "Reminders might not work without notification permission", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun setupPullToRefresh() {
@@ -74,14 +96,16 @@ class TasksFragment : Fragment() {
     private fun setupRecyclerViews() {
         adapter = TasksAdapter(
             onTaskClick = { task -> navigateToEdit(task.id) },
-            onTaskCheckedChange = { task -> viewModel.toggleTaskCompletion(task) }
+            onTaskCheckedChange = { task -> viewModel.toggleTaskCompletion(task) },
+            onNoteClick = { noteId -> navigateToNote(noteId) }
         )
         binding.recyclerViewTasks.adapter = adapter
         binding.recyclerViewTasks.layoutManager = LinearLayoutManager(requireContext())
 
         completedAdapter = TasksAdapter(
             onTaskClick = { task -> navigateToEdit(task.id) },
-            onTaskCheckedChange = { task -> viewModel.toggleTaskCompletion(task) }
+            onTaskCheckedChange = { task -> viewModel.toggleTaskCompletion(task) },
+            onNoteClick = { noteId -> navigateToNote(noteId) }
         )
         binding.recyclerViewCompletedTasks.adapter = completedAdapter
         binding.recyclerViewCompletedTasks.layoutManager = LinearLayoutManager(requireContext())
@@ -91,7 +115,11 @@ class TasksFragment : Fragment() {
                 binding.searchView.hide()
                 navigateToEdit(task.id)
             },
-            onTaskCheckedChange = { task -> viewModel.toggleTaskCompletion(task) }
+            onTaskCheckedChange = { task -> viewModel.toggleTaskCompletion(task) },
+            onNoteClick = { noteId ->
+                binding.searchView.hide()
+                navigateToNote(noteId)
+            }
         )
         binding.recyclerViewSearch.adapter = searchAdapter
         binding.recyclerViewSearch.layoutManager = LinearLayoutManager(requireContext())
@@ -117,38 +145,45 @@ class TasksFragment : Fragment() {
         findNavController().navigate(action)
     }
 
+    private fun navigateToNote(noteId: Int) {
+        val action = TasksFragmentDirections.actionTasksFragmentToEditNoteFragment(noteId)
+        findNavController().navigate(action)
+    }
+
     private fun setupFab() {
         binding.fabAddTask.setOnClickListener { navigateToEdit(-1) }
         binding.btnCreateFirstTask.setOnClickListener { navigateToEdit(-1) }
     }
 
     private fun setupSearch() {
-        binding.searchView.editText.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                viewModel.updateSearchQuery(s?.toString() ?: "")
-            }
-        })
+        binding.searchBar.setOnClickListener {
+            findNavController().navigate(R.id.searchFragment)
+        }
     }
 
     private fun setupFilters() {
-        val filterOptions = listOf("All", "Low", "Medium", "High", "Completed", "Overdue")
+        val filterOptions = listOf("All", "Today", "Upcoming", "Overdue", "Completed")
+        binding.chipGroupFilters.removeAllViews()
         filterOptions.forEach { option ->
             val chip = Chip(requireContext()).apply {
                 text = option
                 isCheckable = true
-                isChecked = option == "All"
+                isChecked = (option == "All" && viewModel.taskFilter.value == TasksViewModel.TaskFilter.ALL) ||
+                            (option == "Today" && viewModel.taskFilter.value == TasksViewModel.TaskFilter.TODAY) ||
+                            (option == "Upcoming" && viewModel.taskFilter.value == TasksViewModel.TaskFilter.UPCOMING) ||
+                            (option == "Overdue" && viewModel.taskFilter.value == TasksViewModel.TaskFilter.OVERDUE) ||
+                            (option == "Completed" && viewModel.taskFilter.value == TasksViewModel.TaskFilter.COMPLETED)
                 setEnsureMinTouchTargetSize(false)
                 setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelMedium)
                 setOnClickListener {
-                    val priority = when (option) {
-                        "Low" -> Priority.LOW
-                        "Medium" -> Priority.MEDIUM
-                        "High" -> Priority.HIGH
-                        else -> null
+                    val filter = when (option) {
+                        "Today" -> TasksViewModel.TaskFilter.TODAY
+                        "Upcoming" -> TasksViewModel.TaskFilter.UPCOMING
+                        "Overdue" -> TasksViewModel.TaskFilter.OVERDUE
+                        "Completed" -> TasksViewModel.TaskFilter.COMPLETED
+                        else -> TasksViewModel.TaskFilter.ALL
                     }
-                    viewModel.updatePriorityFilter(priority)
+                    viewModel.updateTaskFilter(filter)
                 }
             }
             binding.chipGroupFilters.addView(chip)

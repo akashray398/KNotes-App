@@ -60,53 +60,76 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun startAnimations() {
+        // Background Glow pulse
+        binding.ivGlow.animate()
+            .scaleX(1.1f)
+            .scaleY(1.1f)
+            .alpha(0.8f)
+            .setDuration(2000)
+            .setInterpolator(android.view.animation.AccelerateDecelerateInterpolator())
+            .start()
+
         // Logo Card scale and fade in
         binding.cvLogo.animate()
             .alpha(1f)
-            .scaleX(1f)
-            .scaleY(1f)
-            .setDuration(800)
+            .scaleX(1.1f)
+            .scaleY(1.1f)
+            .setDuration(1000)
             .setStartDelay(200)
+            .setInterpolator(android.view.animation.OvershootInterpolator())
+            .withEndAction {
+                binding.cvLogo.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(500)
+                    .start()
+            }
             .start()
 
-        // App Name fade in
+        // App Name slide up and fade in
+        binding.tvAppName.translationY = 40f
         binding.tvAppName.animate()
             .alpha(1f)
-            .setDuration(600)
+            .translationY(0f)
+            .setDuration(800)
             .setStartDelay(600)
             .start()
 
         // Tagline fade in
         binding.tvTagline.animate()
             .alpha(1f)
-            .setDuration(600)
+            .setDuration(800)
             .setStartDelay(1000)
             .start()
 
         // Loading Indicator fade in
         binding.loadingIndicator.animate()
             .alpha(1f)
-            .setDuration(400)
-            .setStartDelay(1200)
+            .setDuration(600)
+            .setStartDelay(1400)
             .start()
 
         // Particle Animations
-        animateParticle(binding.particle1, 2000)
-        animateParticle(binding.particle2, 2500)
-        animateParticle(binding.particle3, 3000)
+        animateParticle(binding.particle1, 2000, -100f)
+        animateParticle(binding.particle2, 2500, -150f)
+        animateParticle(binding.particle3, 3000, -120f)
     }
 
-    private fun animateParticle(view: View, duration: Long) {
+    private fun animateParticle(view: View, duration: Long, distance: Float) {
+        view.alpha = 0f
         view.animate()
             .alpha(0.6f)
-            .translationYBy(-30f)
+            .translationYBy(distance)
             .setDuration(duration)
+            .setInterpolator(android.view.animation.DecelerateInterpolator())
             .withEndAction {
                 view.animate()
                     .alpha(0f)
-                    .translationYBy(30f)
-                    .setDuration(duration)
-                    .withEndAction { animateParticle(view, duration) }
+                    .setDuration(duration / 2)
+                    .withEndAction {
+                        view.translationY = 0f
+                        animateParticle(view, duration, distance)
+                    }
                     .start()
             }
             .start()

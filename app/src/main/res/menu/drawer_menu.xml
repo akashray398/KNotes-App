@@ -14,6 +14,10 @@
     <item android:title="Organize">
         <menu>
             <item
+                android:id="@+id/foldersFragment"
+                android:icon="@drawable/ic_tag"
+                android:title="@string/manage_folders" />
+            <item
                 android:id="@+id/archiveFragment"
                 android:icon="@drawable/ic_sort"
                 android:title="Archive" />
@@ -30,6 +34,10 @@
                 android:id="@+id/action_theme"
                 android:icon="@drawable/ic_ai_assist"
                 android:title="Appearance" />
+            <item
+                android:id="@+id/settingsFragment"
+                android:icon="@drawable/ic_sync"
+                android:title="Cloud Sync" />
         </menu>
     </item>
 </menu>

@@ -3,7 +3,7 @@ package com.example.knotes.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.example.knotes.data.repository.TaskRepository
+import com.example.knotes.domain.repository.TaskRepository
 import com.example.knotes.util.TaskReminderManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope

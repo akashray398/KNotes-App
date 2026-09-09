@@ -10,15 +10,17 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.knotes.R
-import com.example.knotes.data.entity.Priority
-import com.example.knotes.data.entity.Task
+import com.example.knotes.domain.model.Priority
+import com.example.knotes.domain.model.Task
+import com.example.knotes.domain.model.Recurrence
 import com.example.knotes.databinding.ItemTaskBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
 class TasksAdapter(
     private val onTaskClick: (Task) -> Unit,
-    private val onTaskCheckedChange: (Task) -> Unit
+    private val onTaskCheckedChange: (Task) -> Unit,
+    private val onNoteClick: (Int) -> Unit = {}
 ) : ListAdapter<Task, TasksAdapter.TaskViewHolder>(TaskDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
@@ -46,15 +48,27 @@ class TasksAdapter(
                 if (isOverdue) {
                     textViewDeadline.setTextColor(ContextCompat.getColor(root.context, R.color.priority_high))
                     textViewDeadline.alpha = 1.0f
+                    ivCalendar.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(root.context, R.color.priority_high))
                 } else {
                     textViewDeadline.setTextColor(ContextCompat.getColor(root.context, R.color.outlineLight))
                     textViewDeadline.alpha = 0.7f
+                    ivCalendar.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(root.context, R.color.outlineLight))
                 }
                 
                 ivCalendar.visibility = if (deadlineText.isEmpty()) View.GONE else View.VISIBLE
                 ivReminder.visibility = if (task.reminderTime != null) View.VISIBLE else View.GONE
-                ivRepeat.visibility = if (task.recurrence != com.example.knotes.data.entity.Recurrence.NONE) View.VISIBLE else View.GONE
+                ivRepeat.visibility = if (task.recurrence != Recurrence.NONE) View.VISIBLE else View.GONE
                 
+                // Linked note indicator
+                if (task.relatedNoteId != null && task.relatedNoteId != -1) {
+                    layoutLinkedNote.visibility = View.VISIBLE
+                    layoutLinkedNote.setOnClickListener {
+                        onNoteClick(task.relatedNoteId)
+                    }
+                } else {
+                    layoutLinkedNote.visibility = View.GONE
+                }
+
                 chipCategory.visibility = if (task.tags.isNotEmpty()) {
                     chipCategory.text = task.tags[0]
                     View.VISIBLE

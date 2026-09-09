@@ -19,13 +19,13 @@ class NoteRepository @Inject constructor(
     fun searchNotes(query: String): Flow<List<Note>> = noteDao.searchNotes(query)
 
     suspend fun insertNote(note: Note): Long {
-        val id = noteDao.insertNote(note)
+        val id = noteDao.insertNote(note.copy(updatedTime = System.currentTimeMillis(), isSynced = false))
         updateWidget()
         return id
     }
 
     suspend fun updateNote(note: Note) {
-        noteDao.updateNote(note)
+        noteDao.updateNote(note.copy(updatedTime = System.currentTimeMillis(), isSynced = false))
         updateWidget()
     }
 
@@ -57,19 +57,37 @@ class NoteRepository @Inject constructor(
     fun getTrashedCount(): Flow<Int> = noteDao.getTrashedCount()
 
     suspend fun moveToTrash(note: Note) {
-        noteDao.updateNote(note.copy(isTrashed = true, deletedTimestamp = System.currentTimeMillis()))
+        noteDao.updateNote(note.copy(
+            isTrashed = true, 
+            deletedTimestamp = System.currentTimeMillis(),
+            updatedTime = System.currentTimeMillis(),
+            isSynced = false
+        ))
     }
 
     suspend fun restoreFromTrash(note: Note) {
-        noteDao.updateNote(note.copy(isTrashed = false, deletedTimestamp = null))
+        noteDao.updateNote(note.copy(
+            isTrashed = false, 
+            deletedTimestamp = null,
+            updatedTime = System.currentTimeMillis(),
+            isSynced = false
+        ))
     }
 
     suspend fun archiveNote(note: Note) {
-        noteDao.updateNote(note.copy(isArchived = true))
+        noteDao.updateNote(note.copy(
+            isArchived = true,
+            updatedTime = System.currentTimeMillis(),
+            isSynced = false
+        ))
     }
 
     suspend fun unarchiveNote(note: Note) {
-        noteDao.updateNote(note.copy(isArchived = false))
+        noteDao.updateNote(note.copy(
+            isArchived = false,
+            updatedTime = System.currentTimeMillis(),
+            isSynced = false
+        ))
     }
 
     suspend fun deleteOldTrashedNotes(threshold: Long) {

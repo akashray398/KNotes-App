@@ -2,13 +2,14 @@ package com.example.knotes.ui.tasks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.knotes.data.entity.Priority
-import com.example.knotes.data.entity.Task
-import com.example.knotes.data.repository.TaskRepository
+import com.example.knotes.domain.model.Priority
+import com.example.knotes.domain.model.Task
+import com.example.knotes.domain.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -29,10 +30,15 @@ class TasksViewModel @Inject constructor(
     private val _sortOrder = MutableStateFlow(SortOrder.DUE_DATE)
     val sortOrder = _sortOrder.asStateFlow()
 
+    enum class TaskFilter { ALL, TODAY, UPCOMING, COMPLETED, OVERDUE }
+
+    private val _taskFilter = MutableStateFlow(TaskFilter.ALL)
+    val taskFilter = _taskFilter.asStateFlow()
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    val tasks = combine(_searchQuery, _priorityFilter, _sortOrder) { query, priority, sort ->
-        Triple(query, priority, sort)
-    }.flatMapLatest { (query, priority, sort) ->
+    val tasks = combine(_searchQuery, _priorityFilter, _sortOrder, _taskFilter) { query, priority, sort, filter ->
+        Quadruple(query, priority, sort, filter)
+    }.flatMapLatest { (query, priority, sort, filter) ->
         val sourceFlow = if (priority != null) {
             repository.getTasksByPriority(priority)
         } else if (query.isNotBlank()) {
@@ -42,15 +48,53 @@ class TasksViewModel @Inject constructor(
         }
         
         sourceFlow.map { list ->
+            val now = System.currentTimeMillis()
+            val startOfDay = getStartOfDay(now)
+            val endOfDay = getEndOfDay(now)
+
+            val filteredList = when (filter) {
+                TaskFilter.ALL -> list
+                TaskFilter.TODAY -> list.filter { it.deadline != null && it.deadline in startOfDay..endOfDay && !it.isCompleted }
+                TaskFilter.UPCOMING -> list.filter { it.deadline != null && it.deadline > endOfDay && !it.isCompleted }
+                TaskFilter.COMPLETED -> list.filter { it.isCompleted }
+                TaskFilter.OVERDUE -> list.filter { it.deadline != null && it.deadline < startOfDay && !it.isCompleted }
+            }
+
             when (sort) {
-                SortOrder.DUE_DATE -> list.sortedBy { it.deadline ?: Long.MAX_VALUE }
-                SortOrder.PRIORITY -> list.sortedByDescending { it.priority.ordinal }
-                SortOrder.NEWEST -> list.sortedByDescending { it.id } 
-                SortOrder.OLDEST -> list.sortedBy { it.id }
-                SortOrder.ALPHABETICAL -> list.sortedBy { it.title.lowercase() }
+                SortOrder.DUE_DATE -> filteredList.sortedBy { it.deadline ?: Long.MAX_VALUE }
+                SortOrder.PRIORITY -> filteredList.sortedByDescending { it.priority.ordinal }
+                SortOrder.NEWEST -> filteredList.sortedByDescending { it.id } 
+                SortOrder.OLDEST -> filteredList.sortedBy { it.id }
+                SortOrder.ALPHABETICAL -> filteredList.sortedBy { it.title.lowercase() }
             }
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    private fun getStartOfDay(timestamp: Long): Long {
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = timestamp
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
+    }
+
+    private fun getEndOfDay(timestamp: Long): Long {
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = timestamp
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        return calendar.timeInMillis
+    }
+
+    fun updateTaskFilter(filter: TaskFilter) {
+        _taskFilter.value = filter
+    }
+
+    data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
     val productivityStats = combine(
         repository.getCompletedTasksCount(),
@@ -88,9 +132,9 @@ class TasksViewModel @Inject constructor(
     fun toggleTaskCompletion(task: Task) = viewModelScope.launch {
         val newCompletedState = !task.isCompleted
         
-        if (newCompletedState && task.recurrence != com.example.knotes.data.entity.Recurrence.NONE) {
+        if (newCompletedState && task.recurrence != com.example.knotes.domain.model.Recurrence.NONE) {
             // It's a recurring task being completed -> schedule next occurrence
-            val nextDeadline = com.example.knotes.util.RecurrenceHelper.getNextOccurrence(task.deadline, task.recurrence)
+            val nextDeadline = com.example.knotes.util.RecurrenceHelper.getNextOccurrence(task.deadline, com.example.knotes.data.entity.Recurrence.valueOf(task.recurrence.name))
             val updatedTask = task.copy(deadline = nextDeadline, isCompleted = false)
             repository.updateTask(updatedTask)
             

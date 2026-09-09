@@ -10,8 +10,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.knotes.R
-import com.example.knotes.data.entity.Note
-import com.example.knotes.data.entity.Priority
+import com.example.knotes.domain.model.Note
+import com.example.knotes.domain.model.Priority
 import com.example.knotes.databinding.ItemNoteBinding
 import com.google.android.material.chip.Chip
 import java.text.SimpleDateFormat
@@ -20,7 +20,8 @@ import java.util.*
 class NotesAdapter(
     private val onNoteClick: (Note) -> Unit,
     private val onPinClick: (Note) -> Unit,
-    private val onFavoriteClick: ((Note) -> Unit)? = null
+    private val onFavoriteClick: ((Note) -> Unit)? = null,
+    private val onMoreClick: ((Note, View) -> Unit)? = null
 ) : ListAdapter<Note, NotesAdapter.NoteViewHolder>(NoteDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
@@ -40,10 +41,10 @@ class NotesAdapter(
                 textViewTitle.text = note.title
                 
                 // Parse HTML for the preview
-                val descriptionSpannable = android.text.Html.fromHtml(note.description, android.text.Html.FROM_HTML_MODE_COMPACT)
+                val descriptionSpannable = android.text.Html.fromHtml(note.content, android.text.Html.FROM_HTML_MODE_COMPACT)
                 textViewDescription.text = descriptionSpannable
 
-                textViewTimestamp.text = root.context.getString(R.string.edited_label, formatDate(note.timestamp))
+                textViewTimestamp.text = root.context.getString(R.string.edited_label, formatDate(note.createdTime))
                 
                 imageViewPin.visibility = if (note.isPinned) View.VISIBLE else View.GONE
                 ivFavorite.visibility = if (note.isFavorite) View.VISIBLE else View.GONE
@@ -89,6 +90,10 @@ class NotesAdapter(
                 ivFavorite.setOnClickListener { 
                     com.example.knotes.util.HapticHelper.lightTick(it)
                     onFavoriteClick?.invoke(note) 
+                }
+                ivMore.setOnClickListener {
+                    com.example.knotes.util.HapticHelper.lightTick(it)
+                    onMoreClick?.invoke(note, it)
                 }
             }
         }

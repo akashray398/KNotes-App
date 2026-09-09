@@ -58,13 +58,14 @@ fun DashboardCompose(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 8.dp)
+            .animateContentSize()
     ) {
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(items) { item: DashboardItem ->
+            items(items, key = { it.id }) { item: DashboardItem ->
                 DashboardCard(item, onCardClick)
             }
         }
@@ -79,7 +80,6 @@ data class DashboardItem(
     val id: String
 )
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun DashboardCard(
     item: DashboardItem,
@@ -90,77 +90,73 @@ fun DashboardCard(
         visible = true
     }
 
-    val alpha by animateFloatAsState(
-        targetValue = if (visible) 1f else 0f,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
-        label = "alpha"
-    )
-
-    Card(
-        onClick = { onClick(item.id) },
-        modifier = Modifier
-            .width(104.dp)
-            .height(92.dp)
-            .graphicsLayer {
-                this.alpha = alpha
-                this.scaleX = 0.94f + (alpha * 0.06f)
-                this.scaleY = 0.94f + (alpha * 0.06f)
-            },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = CardDefaults.outlinedCardBorder()
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)) +
+                expandHorizontally(animationSpec = spring(stiffness = Spring.StiffnessLow)),
+        label = "DashboardCardVisibility"
     ) {
-        Column(
+        Card(
+            onClick = { onClick(item.id) },
             modifier = Modifier
-                .fillMaxSize()
-                .padding(10.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .width(110.dp)
+                .height(100.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = CardDefaults.outlinedCardBorder(enabled = true)
         ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .background(item.color.copy(alpha = 0.08f)),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Icon(
-                    painter = painterResource(id = item.iconRes),
-                    contentDescription = null,
-                    modifier = Modifier.size(12.dp),
-                    tint = item.color
-                )
-            }
-
-            Column {
-                AnimatedContent(
-                    targetState = item.value,
-                    transitionSpec = {
-                        (slideInVertically { height: Int -> height } + fadeIn() togetherWith
-                                slideOutVertically { height: Int -> -height } + fadeOut())
-                            .using(SizeTransform(clip = false))
-                    }, label = "value"
-                ) { value ->
-                    Text(
-                        text = value,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.ExtraBold,
-                        maxLines = 1,
-                        fontSize = 16.sp,
-                        letterSpacing = (-0.5).sp
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(item.color.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = item.iconRes),
+                        contentDescription = "${item.label} icon",
+                        modifier = Modifier.size(16.dp),
+                        tint = item.color
                     )
                 }
-                Text(
-                    text = item.label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 9.sp,
-                    lineHeight = 10.sp
-                )
+
+                Column {
+                    AnimatedContent(
+                        targetState = item.value,
+                        transitionSpec = {
+                            (slideInVertically { height: Int -> height } + fadeIn() togetherWith
+                                    slideOutVertically { height: Int -> -height } + fadeOut())
+                                .using(SizeTransform(clip = false))
+                        }, label = "value"
+                    ) { value ->
+                        Text(
+                            text = value,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Black,
+                            maxLines = 1,
+                            fontSize = 18.sp,
+                            letterSpacing = (-0.5).sp
+                        )
+                    }
+                    Text(
+                        text = item.label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 10.sp,
+                        lineHeight = 12.sp
+                    )
+                }
             }
         }
     }

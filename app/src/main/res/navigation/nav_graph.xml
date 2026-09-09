@@ -12,10 +12,18 @@
         tools:layout="@layout/fragment_notes">
         <action
             android:id="@+id/action_notesFragment_to_editNoteFragment"
-            app:destination="@id/editNoteFragment" />
+            app:destination="@id/editNoteFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_notesFragment_to_noteDetailFragment"
-            app:destination="@id/noteDetailFragment" />
+            app:destination="@id/noteDetailFragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/fade_out" />
     </fragment>
 
     <fragment
@@ -25,7 +33,14 @@
         tools:layout="@layout/fragment_tasks">
         <action
             android:id="@+id/action_tasksFragment_to_editTaskFragment"
-            app:destination="@id/editTaskFragment" />
+            app:destination="@id/editTaskFragment"
+            app:enterAnim="@anim/slide_in_bottom"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_bottom" />
+        <action
+            android:id="@+id/action_tasksFragment_to_editNoteFragment"
+            app:destination="@id/editNoteFragment" />
     </fragment>
 
     <fragment
@@ -76,5 +91,30 @@
         android:name="com.example.knotes.ui.notes.TrashFragment"
         android:label="Trash"
         tools:layout="@layout/fragment_notes" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.knotes.ui.settings.SettingsFragment"
+        android:label="Settings"
+        tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.example.knotes.ui.search.SearchFragment"
+        android:label="Search"
+        tools:layout="@layout/fragment_search">
+        <action
+            android:id="@+id/action_searchFragment_to_editNoteFragment"
+            app:destination="@id/editNoteFragment" />
+        <action
+            android:id="@+id/action_searchFragment_to_editTaskFragment"
+            app:destination="@id/editTaskFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/foldersFragment"
+        android:name="com.example.knotes.ui.folders.FoldersFragment"
+        android:label="Folders"
+        tools:layout="@layout/fragment_folders" />
 
 </navigation>

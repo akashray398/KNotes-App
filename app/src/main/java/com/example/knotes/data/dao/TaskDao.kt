@@ -56,4 +56,13 @@ interface TaskDao {
 
     @Query("SELECT COUNT(*) FROM tasks WHERE isCompleted = 0 AND deadline >= :since")
     fun getPendingTasksSince(since: Long): Flow<Int>
+
+    @Query("SELECT * FROM tasks WHERE remoteId = :remoteId")
+    suspend fun getTaskByRemoteId(remoteId: String): Task?
+
+    @Query("SELECT * FROM tasks")
+    suspend fun getAllTasksSync(): List<Task>
+
+    @Query("DELETE FROM tasks")
+    suspend fun deleteAll()
 }

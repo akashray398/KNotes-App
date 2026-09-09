@@ -22,7 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.example.knotes.R
 import com.example.knotes.ui.components.DashboardCompose
-import com.example.knotes.data.entity.Note
+import com.example.knotes.domain.model.Note
 import com.example.knotes.databinding.BottomSheetSortFilterBinding
 import com.example.knotes.databinding.FragmentNotesBinding
 import com.example.knotes.util.HapticHelper
@@ -131,14 +131,18 @@ class NotesFragment : Fragment() {
         val onFavoriteClick: (Note) -> Unit = { note ->
             viewModel.toggleFavorite(note)
         }
+        
+        val onMoreClick: (Note, View) -> Unit = { note, view ->
+            showNoteMoreMenu(note, view)
+        }
 
-        adapter = NotesAdapter(onNoteClick, onPinClick, onFavoriteClick)
+        adapter = NotesAdapter(onNoteClick, onPinClick, onFavoriteClick, onMoreClick)
         binding.recyclerViewNotes.adapter = adapter
-        binding.recyclerViewNotes.layoutManager = LinearLayoutManager(requireContext())
+        updateLayoutManager()
 
-        pinnedAdapter = NotesAdapter(onNoteClick, onPinClick, onFavoriteClick)
+        pinnedAdapter = NotesAdapter(onNoteClick, onPinClick, onFavoriteClick, onMoreClick)
         binding.recyclerViewPinned.adapter = pinnedAdapter
-        binding.recyclerViewPinned.layoutManager = LinearLayoutManager(requireContext())
+        updateLayoutManager()
 
         searchAdapter = NotesAdapter(
             onNoteClick = { note ->
@@ -146,7 +150,8 @@ class NotesFragment : Fragment() {
                 onNoteClick(note)
             },
             onPinClick = onPinClick,
-            onFavoriteClick = onFavoriteClick
+            onFavoriteClick = onFavoriteClick,
+            onMoreClick = onMoreClick
         )
         binding.recyclerViewSearch.adapter = searchAdapter
         binding.recyclerViewSearch.layoutManager = LinearLayoutManager(requireContext())
@@ -178,13 +183,9 @@ class NotesFragment : Fragment() {
     }
 
     private fun setupSearch() {
-        binding.searchView.editText.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                viewModel.updateSearchQuery(s?.toString() ?: "")
-            }
-        })
+        binding.searchBar.setOnClickListener {
+            findNavController().navigate(R.id.searchFragment)
+        }
     }
 
     private fun setupDashboard() {
@@ -215,6 +216,10 @@ class NotesFragment : Fragment() {
     private fun setupToolbarActions() {
         binding.searchBar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
+                R.id.action_layout -> {
+                    viewModel.setGridView(!viewModel.isGridView.value)
+                    true
+                }
                 R.id.action_sort -> {
                     showSortFilterBottomSheet()
                     true
@@ -228,10 +233,75 @@ class NotesFragment : Fragment() {
         }
     }
 
+    private fun updateLayoutManager() {
+        val isGrid = viewModel.isGridView.value
+        val layoutManager = if (isGrid) {
+            androidx.recyclerview.widget.StaggeredGridLayoutManager(2, androidx.recyclerview.widget.StaggeredGridLayoutManager.VERTICAL)
+        } else {
+            LinearLayoutManager(requireContext())
+        }
+        
+        binding.recyclerViewNotes.layoutManager = layoutManager
+        
+        binding.recyclerViewPinned.layoutManager = if (isGrid) {
+            androidx.recyclerview.widget.StaggeredGridLayoutManager(2, androidx.recyclerview.widget.StaggeredGridLayoutManager.VERTICAL)
+        } else {
+            LinearLayoutManager(requireContext())
+        }
+        
+        val layoutItem = binding.searchBar.menu.findItem(R.id.action_layout)
+        layoutItem?.setIcon(if (isGrid) R.drawable.ic_format_list_bulleted else R.drawable.ic_notes)
+    }
+
+    private fun showNoteMoreMenu(note: Note, view: View) {
+        val popup = PopupMenu(requireContext(), view)
+        popup.menu.add("Duplicate").setOnMenuItemClickListener {
+            viewModel.duplicateNote(note)
+            true
+        }
+        popup.menu.add(if (note.isPinned) "Unpin" else "Pin").setOnMenuItemClickListener {
+            viewModel.togglePin(note)
+            true
+        }
+        popup.menu.add(if (note.isFavorite) "Unfavorite" else "Favorite").setOnMenuItemClickListener {
+            viewModel.toggleFavorite(note)
+            true
+        }
+        popup.menu.add("Archive").setOnMenuItemClickListener {
+            viewModel.archiveNote(note)
+            true
+        }
+        popup.menu.add("Delete").setOnMenuItemClickListener {
+            viewModel.moveToTrash(note)
+            true
+        }
+        popup.show()
+    }
+
     private fun showSortFilterBottomSheet() {
         val dialog = BottomSheetDialog(requireContext())
         val sheetBinding = BottomSheetSortFilterBinding.inflate(layoutInflater)
         dialog.setContentView(sheetBinding.root)
+
+        // Folders
+        val allFolders = viewModel.folders.value
+        val allChip = Chip(requireContext()).apply {
+            id = View.generateViewId()
+            text = "All Folders"
+            isCheckable = true
+            isChecked = viewModel.selectedFolderId.value == null
+        }
+        sheetBinding.chipGroupFolders.addView(allChip)
+        
+        allFolders.forEach { folder ->
+            val chip = Chip(requireContext()).apply {
+                id = folder.id.toInt()
+                text = folder.name
+                isCheckable = true
+                isChecked = viewModel.selectedFolderId.value == folder.id
+            }
+            sheetBinding.chipGroupFolders.addView(chip)
+        }
 
         // Pre-select current values
         when (viewModel.sortOrder.value) {
@@ -253,6 +323,13 @@ class NotesFragment : Fragment() {
             }
             viewModel.updateSortOrder(sortOrder)
             viewModel.setFilterFavorite(sheetBinding.chipFavorites.isChecked)
+            
+            val selectedFolderId = if (sheetBinding.chipGroupFolders.checkedChipId != -1 && 
+                sheetBinding.chipGroupFolders.checkedChipId != allChip.id) {
+                sheetBinding.chipGroupFolders.checkedChipId.toLong()
+            } else null
+            viewModel.selectFolder(selectedFolderId)
+
             dialog.dismiss()
         }
 
@@ -294,6 +371,12 @@ class NotesFragment : Fragment() {
                 launch {
                     viewModel.streakEvent.collect { streak ->
                         showStreakCelebration(streak)
+                    }
+                }
+
+                launch {
+                    viewModel.isGridView.collect {
+                        updateLayoutManager()
                     }
                 }
             }

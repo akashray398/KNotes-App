@@ -1,5 +1,7 @@
 package com.example.knotes.data
 
+// Redundant file - using com.example.knotes.data.entity.Note instead
+/*
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -10,3 +12,4 @@ data class Note(
     val description: String,
     val timestamp: Long = System.currentTimeMillis()
 )
+*/

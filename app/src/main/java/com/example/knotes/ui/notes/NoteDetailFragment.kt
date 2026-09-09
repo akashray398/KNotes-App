@@ -11,7 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.knotes.R
-import com.example.knotes.data.entity.Note
+import com.example.knotes.domain.model.Note
 import com.example.knotes.databinding.FragmentNoteDetailBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -81,10 +81,10 @@ class NoteDetailFragment : Fragment() {
 
     private fun displayNote(note: Note) {
         binding.tvTitle.text = note.title
-        binding.tvContent.text = Html.fromHtml(note.description, Html.FROM_HTML_MODE_COMPACT)
+        binding.tvContent.text = Html.fromHtml(note.content, Html.FROM_HTML_MODE_COMPACT)
         
         val sdf = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
-        var meta = "Last updated: ${sdf.format(Date(note.timestamp))}"
+        var meta = "Last updated: ${sdf.format(Date(note.createdTime))}"
         
         note.reminderTime?.let {
             meta += "\n⏰ Reminder: ${sdf.format(Date(it))}"

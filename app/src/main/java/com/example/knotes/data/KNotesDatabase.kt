@@ -5,16 +5,32 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.example.knotes.data.dao.FolderDao
 import com.example.knotes.data.dao.NoteDao
 import com.example.knotes.data.dao.TaskDao
-import com.example.knotes.data.entity.Note
-import com.example.knotes.data.entity.Task
+import com.example.knotes.data.dao.SearchHistoryDao
+import com.example.knotes.data.entity.*
 
-@Database(entities = [Note::class, Task::class], version = 4, exportSchema = false)
+@Database(
+    entities = [
+        Note::class,
+        Task::class,
+        Folder::class,
+        ChecklistItem::class,
+        Attachment::class,
+        Tag::class,
+        NoteTagCrossRef::class,
+        SearchHistory::class
+    ],
+    version = 8,
+    exportSchema = false
+)
 @TypeConverters(Converters::class)
 abstract class KNotesDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
     abstract fun taskDao(): TaskDao
+    abstract fun folderDao(): FolderDao
+    abstract fun searchHistoryDao(): SearchHistoryDao
 
     companion object {
         @Volatile
@@ -25,8 +41,9 @@ abstract class KNotesDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     KNotesDatabase::class.java,
-                    "knotes_database"
-                ).build()
+                    "knotes_db"
+                ).fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

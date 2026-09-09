@@ -33,6 +33,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:icon="@drawable/ic_favorite"
+                    android:contentDescription="Favorite"
                     app:iconTint="?attr/colorOnSurfaceVariant" />
 
                 <com.google.android.material.button.MaterialButton
@@ -41,6 +42,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:icon="@drawable/ic_pin"
+                    android:contentDescription="Pin"
                     app:iconTint="?attr/colorOnSurfaceVariant" />
 
                 <com.google.android.material.button.MaterialButton
@@ -49,6 +51,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:icon="@drawable/ic_save"
+                    android:contentDescription="Save"
                     app:iconTint="?attr/colorPrimary" />
 
                 <com.google.android.material.button.MaterialButton
@@ -57,6 +60,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:icon="@drawable/ic_more"
+                    android:contentDescription="More options"
                     app:iconTint="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
 
@@ -249,6 +253,26 @@
                             app:chipIcon="@drawable/shape_circle"
                             app:chipIconTint="@color/priority_high" />
                     </com.google.android.material.chip.ChipGroup>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Folder"
+                        android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                        android:alpha="0.7"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="8dp" />
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none">
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/chip_group_folder"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:singleSelection="true" />
+                    </HorizontalScrollView>
 
                     <TextView
                         android:layout_width="wrap_content"

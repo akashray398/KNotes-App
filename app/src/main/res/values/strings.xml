@@ -23,4 +23,28 @@
     <string name="widget_empty_text">No pinned notes</string>
     <string name="desc_app_logo">App Logo</string>
     <string name="desc_add_note">Add Note</string>
+    <string name="search_hint">Search notes and tasks…</string>
+    <string name="no_results">No results found</string>
+    <string name="recent_searches">Recent searches</string>
+    <string name="manage_folders">Manage Folders</string>
+    <string name="folders">Folders</string>
+    <string name="add_folder">Add Folder</string>
+    <string name="edit_folder">Edit Folder</string>
+    <string name="delete_folder">Delete Folder</string>
+    <string name="folder_name">Folder Name</string>
+    <string name="folder_deleted">Folder deleted</string>
+
+    <!-- Accessibility -->
+    <string name="note_item_description">Note item</string>
+    <string name="pin_icon_description">Pinned</string>
+    <string name="favorite_icon_description">Favorite</string>
+    <string name="more_options_description">More options</string>
+    <string name="task_item_description">Task item</string>
+    <string name="mark_as_completed">Mark as completed</string>
+
+    <string name="desc_profile_picture">Profile Picture</string>
+    <string name="desc_empty_state_illustration">Empty state illustration</string>
+    <string name="desc_add_new_note">Add new note</string>
+    <string name="desc_filter_and_sort">Filter and Sort</string>
+    <string name="desc_add_new_task">Add new task</string>
 </resources>

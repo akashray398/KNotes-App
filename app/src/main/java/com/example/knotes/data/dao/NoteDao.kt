@@ -51,4 +51,19 @@ interface NoteDao {
 
     @Query("SELECT * FROM notes WHERE isPinned = 1 ORDER BY timestamp DESC")
     suspend fun getPinnedNotesSync(): List<Note>
+
+    @Query("SELECT * FROM notes WHERE remoteId = :remoteId")
+    suspend fun getNoteByRemoteId(remoteId: String): Note?
+
+    @Query("UPDATE notes SET folderId = NULL WHERE folderId = :folderId")
+    suspend fun clearNotesFolder(folderId: Long)
+
+    @Query("SELECT * FROM notes")
+    suspend fun getAllNotesSync(): List<Note>
+
+    @Query("DELETE FROM notes")
+    suspend fun deleteAll()
+
+    @Query("DELETE FROM notes WHERE isTrashed = 1")
+    suspend fun clearTrash()
 }

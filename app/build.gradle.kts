@@ -19,6 +19,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        val apiKey = project.findProperty("AI_API_KEY") ?: System.getenv("AI_API_KEY") ?: ""
+        buildConfigField("String", "AI_API_KEY", "\"$apiKey\"")
     }
 
     buildTypes {
@@ -40,6 +43,7 @@ android {
     buildFeatures {
         viewBinding = true
         compose = true
+        buildConfig = true
     }
 }
 
@@ -50,6 +54,12 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.swiperefreshlayout)
+
+    // AI
+    implementation(libs.generativeai)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.logging)
 
     // Room
     implementation(libs.androidx.room.runtime)

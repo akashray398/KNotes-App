@@ -1,5 +1,7 @@
 package com.example.knotes.data
 
+// Redundant file - using com.example.knotes.data.dao.NoteDao instead
+/*
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
@@ -20,3 +22,4 @@ interface NoteDao {
     @Delete
     suspend fun deleteNote(note: Note)
 }
+*/

@@ -2,8 +2,10 @@ package com.example.knotes.ui.notes
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.knotes.data.entity.Note
-import com.example.knotes.data.repository.NoteRepository
+import com.example.knotes.domain.model.Note
+import com.example.knotes.domain.repository.NoteRepository
+import com.example.knotes.domain.repository.TaskRepository as DomainTaskRepository
+import com.example.knotes.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -14,7 +16,11 @@ import javax.inject.Inject
 @HiltViewModel
 class NotesViewModel @Inject constructor(
     private val repository: NoteRepository,
-    private val taskRepository: com.example.knotes.data.repository.TaskRepository,
+    private val taskRepository: DomainTaskRepository,
+    private val getNotesUseCase: GetNotesUseCase,
+    private val saveNoteUseCase: SaveNoteUseCase,
+    private val deleteNoteUseCase: DeleteNoteUseCase,
+    private val getFoldersUseCase: GetFoldersUseCase,
     private val settingsManager: com.example.knotes.util.SettingsManager,
     private val streakManager: com.example.knotes.util.StreakManager
 ) : ViewModel() {
@@ -51,28 +57,47 @@ class NotesViewModel @Inject constructor(
     private val _filterFavorite = MutableStateFlow(false)
     val filterFavorite = _filterFavorite.asStateFlow()
 
+    private val _selectedFolderId = MutableStateFlow<Long?>(null)
+    val selectedFolderId = _selectedFolderId.asStateFlow()
+
+    val folders = getFoldersUseCase().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    val isGridView = settingsManager.isGridView
+        .stateIn(viewModelScope, SharingStarted.Lazily, false)
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    val notes = combine(_searchQuery, _selectedTag, _sortOrder, _filterFavorite) { query, tag, sort, fav ->
-        Quadruple(query, tag, sort, fav)
-    }.flatMapLatest { (query, tag, sort, fav) ->
-        repository.searchNotes(query).map { list ->
+    val notes = combine(_searchQuery, _selectedTag, _sortOrder, _filterFavorite, _selectedFolderId) { query, tag, sort, fav, folderId ->
+        Filters(query, tag, sort, fav, folderId)
+    }.flatMapLatest { filters ->
+        repository.searchNotes(filters.query).map { list ->
             var filteredList = list
-            if (tag != null) {
-                filteredList = filteredList.filter { it.tags.contains(tag) }
+            if (filters.tag != null) {
+                filteredList = filteredList.filter { it.tags.contains(filters.tag) }
             }
-            if (fav) {
+            if (filters.fav) {
                 filteredList = filteredList.filter { it.isFavorite }
             }
+            if (filters.folderId != null) {
+                filteredList = filteredList.filter { it.folderId == filters.folderId }
+            }
 
-            when (sort) {
-                SortOrder.NEWEST -> filteredList.sortedByDescending { it.timestamp }
-                SortOrder.OLDEST -> filteredList.sortedBy { it.timestamp }
+            when (filters.sort) {
+                SortOrder.NEWEST -> filteredList.sortedByDescending { it.createdTime }
+                SortOrder.OLDEST -> filteredList.sortedBy { it.createdTime }
                 SortOrder.ALPHABETICAL -> filteredList.sortedBy { it.title.lowercase() }
                 SortOrder.PRIORITY -> filteredList.sortedByDescending { it.priority.ordinal }
-                SortOrder.LAST_MODIFIED -> filteredList.sortedByDescending { it.timestamp }
+                SortOrder.LAST_MODIFIED -> filteredList.sortedByDescending { it.updatedTime }
             }
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    data class Filters(
+        val query: String,
+        val tag: String?,
+        val sort: SortOrder,
+        val fav: Boolean,
+        val folderId: Long?
+    )
 
     val archivedNotes = repository.getArchivedNotes()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
@@ -83,11 +108,17 @@ class NotesViewModel @Inject constructor(
     val totalNotesCount = repository.getAllNotes().map { it.size }
         .stateIn(viewModelScope, SharingStarted.Lazily, 0)
 
+    val tagUsageCounts = repository.getAllNotes().map { notes ->
+        notes.flatMap { it.tags }
+            .groupingBy { it }
+            .eachCount()
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyMap())
+
     private fun calculateStreak(notes: List<Note>): Int {
         if (notes.isEmpty()) return 0
         val dates = notes.map {
             val cal = Calendar.getInstance()
-            cal.timeInMillis = it.timestamp
+            cal.timeInMillis = it.createdTime
             cal.set(Calendar.HOUR_OF_DAY, 0)
             cal.set(Calendar.MINUTE, 0)
             cal.set(Calendar.SECOND, 0)
@@ -250,12 +281,24 @@ class NotesViewModel @Inject constructor(
         _filterFavorite.value = favorite
     }
 
-    data class Quadruple<out A, out B, out C, out D>(
-        val first: A,
-        val second: B,
-        val third: C,
-        val fourth: D
-    )
+    fun selectFolder(folderId: Long?) {
+        _selectedFolderId.value = folderId
+    }
+
+    fun setGridView(isGrid: Boolean) = viewModelScope.launch {
+        settingsManager.setGridView(isGrid)
+    }
+
+    fun duplicateNote(note: Note) = viewModelScope.launch {
+        val duplicatedNote = note.copy(
+            id = 0,
+            title = "${note.title} (Copy)",
+            createdTime = System.currentTimeMillis(),
+            updatedTime = System.currentTimeMillis(),
+            isSynced = false
+        )
+        repository.insertNote(duplicatedNote)
+    }
 
     suspend fun insertNote(note: Note): Long {
         return repository.insertNote(note)

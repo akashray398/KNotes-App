@@ -4,7 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import com.example.knotes.data.entity.Task
+import com.example.knotes.domain.model.Task
 import com.example.knotes.receiver.ReminderReceiver
 import java.util.concurrent.TimeUnit
 

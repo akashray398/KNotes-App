@@ -23,6 +23,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
@@ -33,9 +34,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.knotes.R
-import com.example.knotes.data.entity.Note
-import com.example.knotes.data.entity.Priority
-import com.example.knotes.data.entity.Task
+import com.example.knotes.domain.model.Note
+import com.example.knotes.domain.model.Priority
+import com.example.knotes.domain.model.Task
 import com.example.knotes.databinding.BottomSheetAiAssistBinding
 import com.example.knotes.databinding.FragmentEditNoteBinding
 import com.example.knotes.ui.tasks.TasksViewModel
@@ -46,6 +47,7 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -59,13 +61,20 @@ class EditNoteFragment : Fragment() {
 
     private val viewModel: NotesViewModel by viewModels()
     private val tasksViewModel: TasksViewModel by viewModels()
+    private val aiViewModel: AiViewModel by viewModels()
     private val args: EditNoteFragmentArgs by navArgs()
+    
+    @javax.inject.Inject
+    lateinit var settingsManager: com.example.knotes.util.SettingsManager
+
     private var currentNote: Note? = null
     
     private var reminderCalendar: Calendar? = null
     private lateinit var speechRecognizer: SpeechRecognizer
     
     private var isFavorite = false
+    private var selectedFolderId: Long? = null
+    private var noteColor: Int = 0
     private var autoSaveJob: Job? = null
     
     private val undoStack = mutableListOf<String>()
@@ -104,6 +113,83 @@ class EditNoteFragment : Fragment() {
 
         setupListeners()
         setupFormattingToolbar()
+        observeFolders()
+        setupBackNavigation()
+        observeAiState()
+    }
+
+    private fun setupBackNavigation() {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            if (hasUnsavedChanges()) {
+                showDiscardDialog()
+            } else {
+                findNavController().navigateUp()
+            }
+        }
+        binding.toolbar.setNavigationOnClickListener {
+            if (hasUnsavedChanges()) {
+                showDiscardDialog()
+            } else {
+                findNavController().navigateUp()
+            }
+        }
+    }
+
+    private fun hasUnsavedChanges(): Boolean {
+        val currentTitle = binding.editTextTitle.text.toString().trim()
+        val currentContent = Html.toHtml(binding.editTextDescription.text, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE)
+        
+        return if (currentNote == null) {
+            currentTitle.isNotEmpty() || binding.editTextDescription.text.isNotEmpty()
+        } else {
+            currentTitle != currentNote?.title || 
+            currentContent != currentNote?.content ||
+            isFavorite != currentNote?.isFavorite ||
+            selectedFolderId != currentNote?.folderId ||
+            noteColor != currentNote?.color
+        }
+    }
+
+    private fun showDiscardDialog() {
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Discard changes?")
+            .setMessage("You have unsaved changes. Are you sure you want to discard them?")
+            .setPositiveButton("Discard") { _, _ ->
+                findNavController().navigateUp()
+            }
+            .setNegativeButton("Keep Editing", null)
+            .show()
+    }
+
+    private fun observeFolders() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.folders.collect { folders ->
+                setupFolderChips(folders)
+            }
+        }
+    }
+
+    private fun setupFolderChips(folders: List<com.example.knotes.domain.model.Folder>) {
+        binding.chipGroupFolder.removeAllViews()
+        
+        // "None" chip
+        val noneChip = com.google.android.material.chip.Chip(requireContext()).apply {
+            text = "None"
+            isCheckable = true
+            isChecked = selectedFolderId == null
+            setOnClickListener { selectedFolderId = null; triggerAutoSave() }
+        }
+        binding.chipGroupFolder.addView(noneChip)
+
+        folders.forEach { folder ->
+            val chip = com.google.android.material.chip.Chip(requireContext()).apply {
+                text = folder.name
+                isCheckable = true
+                isChecked = selectedFolderId == folder.id
+                setOnClickListener { selectedFolderId = folder.id; triggerAutoSave() }
+            }
+            binding.chipGroupFolder.addView(chip)
+        }
     }
 
     private fun setupListeners() {
@@ -296,10 +382,15 @@ class EditNoteFragment : Fragment() {
                 currentNote?.let {
                     binding.editTextTitle.setText(it.title)
                     binding.editTextDescription.setText(
-                        Html.fromHtml(it.description, Html.FROM_HTML_MODE_COMPACT)
+                        Html.fromHtml(it.content, Html.FROM_HTML_MODE_COMPACT)
                     )
                     binding.editTextTags.setText(it.tags.joinToString(", "))
                     isFavorite = it.isFavorite
+                    selectedFolderId = it.folderId
+                    noteColor = it.color
+                    if (noteColor != 0) {
+                        binding.root.setBackgroundColor(noteColor)
+                    }
                     updateFavoriteIcon()
                     
                     it.reminderTime?.let { time ->
@@ -421,175 +512,110 @@ class EditNoteFragment : Fragment() {
     }
 
     private fun showAiAssistBottomSheet() {
-        val dialog = BottomSheetDialog(requireContext())
-        val bottomSheetBinding = BottomSheetAiAssistBinding.inflate(layoutInflater)
-        dialog.setContentView(bottomSheetBinding.root)
+        viewLifecycleOwner.lifecycleScope.launch {
+            val consent = settingsManager.aiConsentGiven.first()
+            if (!consent) {
+                showAiConsentDialog()
+            } else {
+                val dialog = BottomSheetDialog(requireContext())
+                val bottomSheetBinding = BottomSheetAiAssistBinding.inflate(layoutInflater)
+                dialog.setContentView(bottomSheetBinding.root)
 
-        bottomSheetBinding.cardFullSuggestion.setOnClickListener {
-            aiFullSuggestion()
-            dialog.dismiss()
+                bottomSheetBinding.cardFullSuggestion.setOnClickListener {
+                    aiFullSuggestion()
+                    dialog.dismiss()
+                }
+
+                bottomSheetBinding.cardAutoTitle.setOnClickListener {
+                    autoGenerateTitle()
+                    dialog.dismiss()
+                }
+
+                bottomSheetBinding.cardSummarize.setOnClickListener {
+                    summarizeNote()
+                    dialog.dismiss()
+                }
+
+                bottomSheetBinding.cardExtractTasks.setOnClickListener {
+                    extractTasksFromNote()
+                    dialog.dismiss()
+                }
+
+                bottomSheetBinding.cardImproveWriting.setOnClickListener {
+                    improveWriting()
+                    dialog.dismiss()
+                }
+
+                bottomSheetBinding.cardGenerateTags.setOnClickListener {
+                    generateTagsFromAi()
+                    dialog.dismiss()
+                }
+
+                bottomSheetBinding.cardExplain.setOnClickListener {
+                    explainNote()
+                    dialog.dismiss()
+                }
+
+                dialog.show()
+            }
         }
+    }
 
-        bottomSheetBinding.cardAutoTitle.setOnClickListener {
-            autoGenerateTitle()
-            dialog.dismiss()
-        }
-
-        bottomSheetBinding.cardSummarize.setOnClickListener {
-            summarizeNote()
-            dialog.dismiss()
-        }
-
-        bottomSheetBinding.cardExtractTasks.setOnClickListener {
-            extractTasksFromNote()
-            dialog.dismiss()
-        }
-
-        bottomSheetBinding.cardImproveWriting.setOnClickListener {
-            improveWriting()
-            dialog.dismiss()
-        }
-
-        bottomSheetBinding.cardGenerateTags.setOnClickListener {
-            generateTagsFromAi()
-            dialog.dismiss()
-        }
-
-        bottomSheetBinding.cardExplain.setOnClickListener {
-            explainNote()
-            dialog.dismiss()
-        }
-
-        dialog.show()
+    private fun showAiConsentDialog() {
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("AI Privacy Notice")
+            .setMessage("KNotes AI uses Google Gemini to process your notes. By enabling this, your note content will be sent to external servers. No data is stored permanently by the AI service. Do you consent?")
+            .setPositiveButton("I Consent") { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    settingsManager.setAiConsentGiven(true)
+                    settingsManager.setAiEnabled(true)
+                    showAiAssistBottomSheet()
+                }
+            }
+            .setNegativeButton("Not Now", null)
+            .show()
     }
 
     private fun aiFullSuggestion() {
         val currentTitle = binding.editTextTitle.text.toString()
         val currentContent = binding.editTextDescription.text.toString()
-        
-        viewLifecycleOwner.lifecycleScope.launch {
-            val snackbar = Snackbar.make(binding.root, "AI is analyzing...", Snackbar.LENGTH_INDEFINITE)
-            snackbar.show()
-            delay(1500)
-
-            if (currentContent.isBlank() && currentTitle.isNotBlank()) {
-                val suggestion = when {
-                    currentTitle.lowercase().contains("meeting") -> "• Objective: \n• Attendees: \n• Discussion Points: \n• Action Items: "
-                    currentTitle.lowercase().contains("shopping") -> "• Groceries: \n• Household items: \n• Electronics: "
-                    currentTitle.lowercase().contains("project") -> "• Overview: \n• Roadmap: \n• Dependencies: \n• Deadline: "
-                    else -> "Start by detailing your thoughts on $currentTitle..."
-                }
-                binding.editTextDescription.setText(suggestion)
-            } else if (currentContent.isNotBlank()) {
-                if (currentTitle.isBlank()) {
-                    val firstLine = currentContent.lines().firstOrNull { it.isNotBlank() } ?: "Untitled"
-                    binding.editTextTitle.setText(firstLine.take(30).trim())
-                }
-
-                val words = currentContent.split("\\s+".toRegex()).filter { it.length > 5 }.take(3)
-                    .map { it.lowercase().filter { c -> c.isLetterOrDigit() } }
-                val newTags = words.joinToString(", ")
-                if (binding.editTextTags.text.isNullOrBlank()) {
-                    binding.editTextTags.setText(newTags)
-                }
-            } else {
-                binding.editTextTitle.setText("Daily Journal")
-                binding.editTextDescription.setText("Today was a productive day. I achieved...")
-                binding.editTextTags.setText("Journal, Thoughts")
-            }
-
-            snackbar.dismiss()
-            Snackbar.make(binding.root, "AI Suggestions applied!", Snackbar.LENGTH_SHORT).show()
-        }
+        aiViewModel.askQuestion(currentContent, "Suggest content for this note titled: $currentTitle")
     }
 
     private fun autoGenerateTitle() {
         val content = binding.editTextDescription.text.toString()
         if (content.isBlank()) return
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val firstLine = content.lines().firstOrNull { it.isNotBlank() } ?: "Untitled"
-            val words = firstLine.split(" ").take(4).joinToString(" ")
-            val generatedTitle = words.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-            binding.editTextTitle.setText(generatedTitle)
-        }
+        aiViewModel.generateTitle(content)
     }
 
     private fun summarizeNote() {
         val content = binding.editTextDescription.text.toString()
         if (content.isBlank()) return
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val summary = "\n\n--- ✨ AI Summary ---\n• " + (if (content.contains(".")) content.split(".")[0] else content).trim() + ".\n• Key takeaway: High priority items identified."
-            binding.editTextDescription.append(summary)
-        }
+        aiViewModel.summarize(content)
     }
 
     private fun improveWriting() {
         val content = binding.editTextDescription.text.toString()
         if (content.isBlank()) return
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val improved = content.replace("(?i)i want to".toRegex(), "I intend to")
-                .replace("(?i)help me".toRegex(), "assist me")
-            binding.editTextDescription.setText(improved)
-        }
+        aiViewModel.improveGrammar(content)
     }
 
     private fun generateTagsFromAi() {
         val content = binding.editTextDescription.text.toString()
         if (content.isBlank()) return
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val words = content.split("\\s+".toRegex())
-                .filter { it.length > 5 }
-                .take(3)
-                .map { it.lowercase().filter { c -> c.isLetterOrDigit() } }
-                .distinct()
-            
-            if (words.isNotEmpty()) {
-                val currentTags = binding.editTextTags.text.toString()
-                val newTags = if (currentTags.isBlank()) words.joinToString(", ") 
-                              else "$currentTags, ${words.joinToString(", ")}"
-                binding.editTextTags.setText(newTags)
-                Snackbar.make(binding.root, "Tags generated!", Snackbar.LENGTH_SHORT).show()
-            }
-        }
+        aiViewModel.generateTags(content)
     }
 
     private fun explainNote() {
         val content = binding.editTextDescription.text.toString()
         if (content.isBlank()) return
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val explanation = "\n\n--- 💡 Simple Explanation ---\nIn simple terms, this note discusses " + 
-                (if (content.length > 20) content.substring(0, 20) else content).trim() + "..."
-            binding.editTextDescription.append(explanation)
-        }
+        aiViewModel.askQuestion(content, "Explain this note in simple terms.")
     }
 
     private fun extractTasksFromNote() {
         val content = binding.editTextDescription.text.toString()
         if (content.isBlank()) return
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val lines = content.lines()
-            lines.forEach { line ->
-                val trimmed = line.trim()
-                if (trimmed.startsWith("-") || trimmed.startsWith("*")) {
-                    val taskTitle = trimmed.substring(1).trim()
-                    if (taskTitle.isNotBlank()) {
-                        val task = Task(
-                            title = taskTitle,
-                            priority = Priority.MEDIUM,
-                            deadline = System.currentTimeMillis() + 86400000
-                        )
-                        tasksViewModel.insertTask(task)
-                    }
-                }
-            }
-            Snackbar.make(binding.root, "Tasks extracted and saved!", Snackbar.LENGTH_SHORT).show()
-        }
+        aiViewModel.extractTasks(content)
     }
 
     private fun saveNote(navigateUp: Boolean) {
@@ -609,19 +635,25 @@ class EditNoteFragment : Fragment() {
 
         val note = currentNote?.copy(
             title = if (title.isEmpty()) "Untitled" else title,
-            description = description,
+            content = description,
             tags = tags,
             isFavorite = isFavorite,
             priority = priority,
+            folderId = selectedFolderId,
+            color = noteColor,
             reminderTime = reminderCalendar?.timeInMillis,
-            timestamp = System.currentTimeMillis()
+            updatedTime = System.currentTimeMillis()
         ) ?: Note(
             title = if (title.isEmpty()) "Untitled" else title,
-            description = description,
+            content = description,
             tags = tags,
             isFavorite = isFavorite,
             priority = priority,
-            reminderTime = reminderCalendar?.timeInMillis
+            folderId = selectedFolderId,
+            color = noteColor,
+            reminderTime = reminderCalendar?.timeInMillis,
+            createdTime = System.currentTimeMillis(),
+            updatedTime = System.currentTimeMillis()
         )
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -650,6 +682,23 @@ class EditNoteFragment : Fragment() {
         }
     }
 
+    private val exportTextLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+        uri?.let {
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    val outputStream = requireContext().contentResolver.openOutputStream(it)
+                    outputStream?.use { stream ->
+                        val content = "${binding.editTextTitle.text}\n\n${binding.editTextDescription.text}"
+                        stream.write(content.toByteArray())
+                    }
+                    Toast.makeText(requireContext(), "Note exported", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(), "Export failed", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     private fun showMoreMenu(view: View) {
         val popup = PopupMenu(requireContext(), view)
         popup.menuInflater.inflate(R.menu.menu_edit_note_more, popup.menu)
@@ -659,18 +708,60 @@ class EditNoteFragment : Fragment() {
                     shareNote()
                     true
                 }
+                R.id.action_copy -> {
+                    copyToClipboard()
+                    true
+                }
+                R.id.action_export_text -> {
+                    exportTextLauncher.launch("${binding.editTextTitle.text.toString().take(20)}.txt")
+                    true
+                }
                 R.id.action_delete -> {
                     deleteNote()
                     true
                 }
                 R.id.action_color -> {
-                    Toast.makeText(requireContext(), "Color picker coming soon", Toast.LENGTH_SHORT).show()
+                    showNoteColorPicker()
                     true
                 }
                 else -> false
             }
         }
         popup.show()
+    }
+
+    private fun copyToClipboard() {
+        val clipboard = ContextCompat.getSystemService(requireContext(), android.content.ClipboardManager::class.java)
+        val clip = android.content.ClipData.newPlainText("KNote", 
+            "${binding.editTextTitle.text}\n\n${binding.editTextDescription.text}")
+        clipboard?.setPrimaryClip(clip)
+        Toast.makeText(requireContext(), "Copied to clipboard", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showNoteColorPicker() {
+        val colors = intArrayOf(
+            0, // Default
+            Color.parseColor("#FFF4F4"), // Light Red
+            Color.parseColor("#F4FFF4"), // Light Green
+            Color.parseColor("#F4F4FF"), // Light Blue
+            Color.parseColor("#FFFFF4"), // Light Yellow
+            Color.parseColor("#FFF4FF"), // Light Pink
+            Color.parseColor("#F4FFFF")  // Light Cyan
+        )
+        val colorNames = arrayOf("Default", "Light Red", "Light Green", "Light Blue", "Light Yellow", "Light Pink", "Light Cyan")
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Select Note Color")
+            .setItems(colorNames) { _, which ->
+                noteColor = colors[which]
+                if (noteColor != 0) {
+                    binding.root.setBackgroundColor(noteColor)
+                } else {
+                    binding.root.setBackgroundColor(MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorSurface, Color.WHITE))
+                }
+                triggerAutoSave()
+            }
+            .show()
     }
 
     private fun deleteNote() {
@@ -697,5 +788,45 @@ class EditNoteFragment : Fragment() {
         super.onDestroyView()
         speechRecognizer.destroy()
         _binding = null
+    }
+
+    private fun observeAiState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            aiViewModel.uiState.collect { state ->
+                when (state) {
+                    is AiViewModel.AiUiState.Loading -> {
+                        binding.tvSaveStatus.text = "AI thinking..."
+                        binding.tvSaveStatus.visibility = View.VISIBLE
+                    }
+                    is AiViewModel.AiUiState.Success -> {
+                        binding.tvSaveStatus.visibility = View.GONE
+                        binding.editTextDescription.append("\n\n--- AI Output ---\n${state.output}")
+                        aiViewModel.resetState()
+                    }
+                    is AiViewModel.AiUiState.TagsGenerated -> {
+                        binding.tvSaveStatus.visibility = View.GONE
+                        val currentTags = binding.editTextTags.text.toString()
+                        val newTags = if (currentTags.isBlank()) state.tags.joinToString(", ") 
+                                      else "$currentTags, ${state.tags.joinToString(", ")}"
+                        binding.editTextTags.setText(newTags)
+                        aiViewModel.resetState()
+                    }
+                    is AiViewModel.AiUiState.TasksExtracted -> {
+                        binding.tvSaveStatus.visibility = View.GONE
+                        state.tasks.forEach { taskTitle ->
+                            tasksViewModel.insertTask(Task(title = taskTitle))
+                        }
+                        Snackbar.make(binding.root, "${state.tasks.size} tasks extracted!", Snackbar.LENGTH_SHORT).show()
+                        aiViewModel.resetState()
+                    }
+                    is AiViewModel.AiUiState.Error -> {
+                        binding.tvSaveStatus.visibility = View.GONE
+                        Toast.makeText(requireContext(), "AI Error: ${state.message}", Toast.LENGTH_SHORT).show()
+                        aiViewModel.resetState()
+                    }
+                    else -> {}
+                }
+            }
+        }
     }
 }

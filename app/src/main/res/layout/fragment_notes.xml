@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
+        android:fitsSystemWindows="true"
         app:elevation="0dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -49,6 +50,7 @@
                 android:layout_height="48dp"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_app_logo"
+                android:contentDescription="@string/desc_profile_picture"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -179,7 +181,8 @@
                     android:layout_width="160dp"
                     android:layout_height="160dp"
                     android:src="@drawable/ic_app_logo"
-                    android:alpha="0.5" />
+                    android:alpha="0.5"
+                    android:contentDescription="@string/desc_empty_state_illustration" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -218,6 +221,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:text="New Note"
+        android:contentDescription="@string/desc_add_new_note"
         app:icon="@drawable/ic_notes"
         android:textColor="?attr/colorOnPrimaryContainer"
         app:iconTint="?attr/colorOnPrimaryContainer"

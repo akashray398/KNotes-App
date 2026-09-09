@@ -19,13 +19,18 @@ class TaskRepository @Inject constructor(
 
     suspend fun getTaskById(id: Int): Task? = taskDao.getTaskById(id)
 
-    suspend fun insertTask(task: Task): Long = taskDao.insertTask(task)
+    suspend fun insertTask(task: Task): Long = taskDao.insertTask(task.copy(updatedTime = System.currentTimeMillis(), isSynced = false))
 
-    suspend fun updateTask(task: Task) = taskDao.updateTask(task)
+    suspend fun updateTask(task: Task) = taskDao.updateTask(task.copy(updatedTime = System.currentTimeMillis(), isSynced = false))
 
     suspend fun deleteTask(task: Task) = taskDao.deleteTask(task)
 
-    suspend fun updateTaskCompletion(id: Int, isCompleted: Boolean) = taskDao.updateTaskCompletion(id, isCompleted)
+    suspend fun updateTaskCompletion(id: Int, isCompleted: Boolean) {
+        val task = taskDao.getTaskById(id)
+        if (task != null) {
+            taskDao.updateTask(task.copy(isCompleted = isCompleted, updatedTime = System.currentTimeMillis(), isSynced = false))
+        }
+    }
 
     fun getCompletedTasksCount(): Flow<Int> = taskDao.getCompletedTasksCount()
 

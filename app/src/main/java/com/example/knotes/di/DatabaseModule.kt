@@ -3,6 +3,7 @@ package com.example.knotes.di
 import android.content.Context
 import androidx.room.Room
 import com.example.knotes.data.KNotesDatabase
+import com.example.knotes.data.dao.FolderDao
 import com.example.knotes.data.dao.NoteDao
 import com.example.knotes.data.dao.TaskDao
 import dagger.Module
@@ -32,4 +33,10 @@ object DatabaseModule {
 
     @Provides
     fun provideTaskDao(database: KNotesDatabase): TaskDao = database.taskDao()
+
+    @Provides
+    fun provideFolderDao(database: KNotesDatabase): FolderDao = database.folderDao()
+
+    @Provides
+    fun provideSearchHistoryDao(database: KNotesDatabase) = database.searchHistoryDao()
 }

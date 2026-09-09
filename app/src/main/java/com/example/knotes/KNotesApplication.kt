@@ -10,6 +10,7 @@ import com.example.knotes.util.NotificationHelper
 import com.example.knotes.worker.DailyReminderWorker
 import com.example.knotes.worker.OverdueCheckWorker
 import com.example.knotes.worker.TrashCleanupWorker
+import com.google.firebase.FirebaseApp
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject

@@ -15,115 +15,38 @@ KNotes is a premium Android productivity suite built with **Kotlin**, **Material
 
 ---
 
-## 🎨 Design Philosophy
+## 📐 Architecture: Scalable & Clean
 
-KNotes embraces the principles of **Material You**, delivering a personalized and delightful user experience.
+KNotes is built upon a formal **Clean Architecture** foundation, ensuring high testability, maintainability, and separation of concerns.
 
-### 🌈 Modern UI Experience
-
-* Material 3 dynamic theming
-* Adaptive layouts for different screen sizes
-* Elegant typography and spacing
-* Light & Dark theme support
-
-### ✨ Motion & Interactions
-
-* Smooth Material Motion transitions
-* Delightful micro-interactions
-* Fluid list and grid animations
-* Responsive touch feedback
-
-### 🎯 Productivity First
-
-* Fast note creation and editing
-* Minimal distractions
-* Organized information hierarchy
-* Optimized workflows
-
----
-
-## 📸 App Preview
-
-<div align="center">
-
-<table>
-<tr>
-<td align="center">
-<img src="https://github.com/user-attachments/assets/a5df292f-7d04-4414-8c10-a8d4875a588f" width="220"/><br/>
-<b>Notes Dashboard</b>
-</td>
-
-<td align="center">
-<img src="https://github.com/user-attachments/assets/937f00e3-cf69-47b8-8e1b-1936e52fd968" width="220"/><br/>
-<b>Rich Note Editor</b>
-</td>
-
-<td align="center">
-<img src="https://github.com/user-attachments/assets/2b406d10-1bfe-4d96-85dd-62ab7a8d9892" width="220"/><br/>
-<b>Task Management</b>
-</td>
-</tr>
-</table>
-
-</div>
-
-<p align="center">
-<i>Beautiful • Fast • Intelligent</i>
-</p>
+*   **Domain Layer**: Pure Kotlin business logic containing Models, Repository Interfaces, and UseCases.
+*   **Data Layer**: Room local storage, Firebase remote storage, and Repository implementations with Mappers.
+*   **Presentation Layer**: MVVM pattern using StateFlow and a hybrid of XML Fragments and Jetpack Compose.
+*   **DI Layer**: Robust dependency injection powered by Hilt.
 
 ---
 
 ## 🌟 Key Features
 
 ### 📝 Smart Note Management
+*   **Rich Editor**: HTML-based rich text with formatting, undo/redo, and background colors.
+*   **Organization**: Categorize notes into **Folders** and manage them with a many-to-many **Tagging** system.
+*   **Organization View**: Toggle between **Grid and List** layouts.
 
-* Create, edit, and organize notes effortlessly
-* Pin important notes for quick access
-* Mark favorites for better organization
-* Archive notes without deleting them
-* Intelligent search and filtering
-* **Advanced Gestures**: Swipe to archive or trash notes
+### ✅ Task & Productivity
+*   **Unified Tasks**: Manage pending and completed tasks with deadlines and priority levels.
+*   **Reminders**: High-precision notifications scheduled via AlarmManager with boot recovery.
+*   **Note-Task Linking**: Associate tasks directly with relevant notes for better context.
 
-### 🔥 Gamification & Motivation
+### 🔍 Unified Intelligence
+*   **Global Search**: Instant, debounced search across all notes and tasks with search history.
+*   **AI Assistant**: Powered by **Google Gemini** for summarization, task extraction, grammar polishing, and Q&A.
+*   **Privacy-First AI**: Explicit user consent and local toggles for AI data processing.
 
-* **Daily Streak System**: Track your productivity and maintain your streak
-* **Milestone Celebrations**: Delightful animations when reaching goals
-* **Dynamic Dashboard**: Real-time statistics of your notes and tasks
-
-### 🗑️ Advanced Recovery System
-
-* Dedicated trash management
-* 30-day automatic recovery window
-* Scheduled cleanup using WorkManager
-* Protection against accidental deletion
-
-### 🤖 AI Assistant
-
-* Auto-summarization of long notes
-* Intelligent title generation
-* Task extraction from content
-* Context-aware productivity suggestions
-
-### ⚡ Powerful Writing Experience
-
-* Markdown support with live rendering
-* Rich formatting toolbar
-* Voice-to-text note creation
-* Fast and distraction-free editor
-
-### 🔒 Security & Privacy
-
-* Biometric authentication support
-* Encrypted local storage
-* Secure preference management
-* User-focused privacy controls
-
-### ☁️ Cloud Sync
-
-* Firebase Authentication
-* Firestore cloud synchronization
-* Cross-device accessibility
-* Secure cloud backup
+### ☁️ Cloud & Backup
+*   **Firebase Sync**: Secure cross-device synchronization via Firestore and Firebase Auth.
+*   **Data Sovereignty**: Export your entire database to **JSON** or individual notes to **Text (.txt)**.
+*   **Offline First**: Fully functional without internet, with seamless background synchronization.
 
 ---
 
@@ -132,198 +55,46 @@ KNotes embraces the principles of **Material You**, delivering a personalized an
 | Layer                | Technology                        |
 | -------------------- | --------------------------------- |
 | Language             | Kotlin (Coroutines + Flow)        |
-| Architecture         | MVVM + Clean Architecture         |
+| UI Framework         | Material 3 + Jetpack Compose      |
+| Architecture         | Clean Architecture + MVVM          |
 | Dependency Injection | Hilt                              |
 | Database             | Room                              |
 | Cloud Services       | Firebase Auth + Firestore         |
+| AI Engine            | Google Gemini SDK                 |
 | Background Tasks     | WorkManager                       |
 | Preferences          | DataStore                         |
-| UI Framework         | Material 3 + Compose Hybrid       |
-| Animations           | Lottie + Material Motion          |
-| Security             | BiometricPrompt + Security Crypto |
-| Markdown Rendering   | Markwon                           |
-| Navigation           | Jetpack Navigation                |
-| Lifecycle            | AndroidX Lifecycle Components     |
 
 ---
 
-## 📐 Architecture Overview
+## 🚀 Installation & Setup
 
-KNotes follows a scalable architecture based on **MVVM**, **Repository Pattern**, and **Single Source of Truth** principles.
+### 1️⃣ API Key Configuration
+KNotes AI features require a Gemini API key. 
+1. Get a key from [Google AI Studio](https://aistudio.google.com/).
+2. Add the following to your `local.properties`:
+   ```properties
+   AI_API_KEY=your_actual_key_here
+   ```
 
-```mermaid
-graph TD
-
-    subgraph UI Layer
-        A[Notes Fragment]
-        B[Tasks Fragment]
-        C[Settings Fragment]
-    end
-
-    subgraph ViewModels
-        D[NotesViewModel]
-        E[TasksViewModel]
-        F[SettingsViewModel]
-    end
-
-    subgraph Repository Layer
-        G[Note Repository]
-        H[Task Repository]
-    end
-
-    subgraph Local Storage
-        I[(Room Database)]
-        J[(DataStore)]
-    end
-
-    subgraph Cloud Services
-        K[(Firebase Auth)]
-        L[(Firestore)]
-    end
-
-    subgraph Background Processing
-        M[WorkManager]
-    end
-
-    A --> D
-    B --> E
-    C --> F
-
-    D --> G
-    E --> H
-
-    G --> I
-    H --> I
-
-    F --> J
-
-    G --> L
-    H --> L
-
-    L --> K
-
-    M --> I
-```
+### 2️⃣ Firebase Setup
+1. Create a project in the [Firebase Console](https://console.firebase.google.com/).
+2. Add your `google-services.json` to the `app/` directory.
+3. Enable Email/Password Auth and Cloud Firestore.
 
 ---
 
-## 📂 Project Structure
-
-```text
-KNotes/
-├── app/
-│
-├── data/
-│   ├── dao/
-│   ├── database/
-│   ├── entity/
-│   └── model/
-│
-├── repository/
-│
-├── di/
-│
-├── ui/
-│   ├── notes/
-│   ├── tasks/
-│   ├── settings/
-│   └── shared/
-│
-├── util/
-│
-├── worker/
-│
-├── build.gradle.kts
-└── libs.versions.toml
-```
-
----
-
-## 🚀 Getting Started
-
-### 1️⃣ Clone Repository
-
-```bash
-git clone https://github.com/akashray398/KNotes-App.git
-```
-
-### 2️⃣ Open in Android Studio
-
-Open the project using the latest stable version of Android Studio.
-
-### 3️⃣ Sync Dependencies
-
-Allow Gradle to download and configure all required dependencies.
-
-### 4️⃣ Run Application
-
-Connect an Android device or emulator running Android 8.0 (API 26) or higher.
-
----
-
-## 📋 Requirements
-
-| Requirement    | Version           |
-| -------------- | ----------------- |
-| Android Studio | Latest Stable     |
-| Minimum SDK    | 26                |
-| Target SDK     | 36                |
-| Kotlin         | 2.0.21            |
-| Gradle         | Latest Compatible |
-
----
-
-## 🗺️ Future Roadmap
-
-* [ ] AI note categorization
-* [ ] AI-powered chat assistant
-* [ ] Collaborative notes
-* [ ] Rich text editor
-* [ ] Calendar integration
-* [ ] Note sharing system
-* [ ] Wear OS support
-* [ ] Tablet optimized layouts
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome and greatly appreciated.
-
-1. Fork the repository
-2. Create your feature branch
-
-```bash
-git checkout -b feature/amazing-feature
-```
-
-3. Commit your changes
-
-```bash
-git commit -m "Add amazing feature"
-```
-
-4. Push to GitHub
-
-```bash
-git push origin feature/amazing-feature
-```
-
-5. Open a Pull Request
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License.
-
-See the `LICENSE` file for details.
+## 🤝 Portfolio Value
+This project demonstrates proficiency in:
+*   **Modern Android Development**: Compose, Hilt, Room, WorkManager.
+*   **Enterprise Architecture**: Multi-layered Clean Architecture.
+*   **AI Integration**: Practical implementation of LLMs in mobile apps.
+*   **Security**: Biometric security, encrypted preferences, and secure API handling.
 
 ---
 
 <div align="center">
 
-### ⭐ If you like KNotes, consider giving it a star!
+### ⭐ Professional • Reliable • Intelligent
 
 Made with ❤️ by **Akash**
 
