@@ -24,8 +24,7 @@ object DatabaseModule {
             context,
             KNotesDatabase::class.java,
             "knotes_db"
-        ).fallbackToDestructiveMigration()
-            .build()
+        ).build()
     }
 
     @Provides
@@ -39,4 +38,7 @@ object DatabaseModule {
 
     @Provides
     fun provideSearchHistoryDao(database: KNotesDatabase) = database.searchHistoryDao()
+
+    @Provides
+    fun provideNoteVersionDao(database: KNotesDatabase) = database.noteVersionDao()
 }

@@ -50,9 +50,9 @@ class TasksAdapter(
                     textViewDeadline.alpha = 1.0f
                     ivCalendar.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(root.context, R.color.priority_high))
                 } else {
-                    textViewDeadline.setTextColor(ContextCompat.getColor(root.context, R.color.outlineLight))
+                    textViewDeadline.setTextColor(ContextCompat.getColor(root.context, R.color.outline))
                     textViewDeadline.alpha = 0.7f
-                    ivCalendar.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(root.context, R.color.outlineLight))
+                    ivCalendar.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(root.context, R.color.outline))
                 }
                 
                 ivCalendar.visibility = if (deadlineText.isEmpty()) View.GONE else View.VISIBLE

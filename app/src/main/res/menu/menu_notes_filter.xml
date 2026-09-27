@@ -16,4 +16,9 @@
         android:icon="@drawable/ic_voice"
         android:title="Voice Search"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_ai_chat"
+        android:icon="@drawable/ic_ai_assist"
+        android:title="AI Chat"
+        app:showAsAction="ifRoom" />
 </menu>

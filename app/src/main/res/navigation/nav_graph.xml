@@ -51,6 +51,9 @@
         <argument
             android:name="noteId"
             app:argType="integer" />
+        <action
+            android:id="@+id/action_editNoteFragment_to_versionHistoryFragment"
+            app:destination="@id/versionHistoryFragment" />
     </fragment>
 
     <fragment
@@ -116,5 +119,19 @@
         android:name="com.example.knotes.ui.folders.FoldersFragment"
         android:label="Folders"
         tools:layout="@layout/fragment_folders" />
+
+    <fragment
+        android:id="@+id/aiChatFragment"
+        android:name="com.example.knotes.ui.notes.AiChatFragment"
+        android:label="AI Chat" />
+
+    <fragment
+        android:id="@+id/versionHistoryFragment"
+        android:name="com.example.knotes.ui.notes.VersionHistoryFragment"
+        android:label="Version History">
+        <argument
+            android:name="noteId"
+            app:argType="integer" />
+    </fragment>
 
 </navigation>

@@ -10,4 +10,6 @@ interface AiRepository {
     suspend fun extractTasks(text: String): Result<List<String>>
     suspend fun generateTitle(text: String): Result<String>
     suspend fun askQuestion(noteContent: String, question: String): Result<String>
+    suspend fun chat(history: List<Pair<String, String>>, message: String, context: String): Result<String>
+    suspend fun analyzeImage(bitmap: android.graphics.Bitmap, prompt: String): Result<String>
 }

@@ -67,6 +67,9 @@ class EditNoteFragment : Fragment() {
     @javax.inject.Inject
     lateinit var settingsManager: com.example.knotes.util.SettingsManager
 
+    @javax.inject.Inject
+    lateinit var saveNoteVersionUseCase: com.example.knotes.domain.usecase.SaveNoteVersionUseCase
+
     private var currentNote: Note? = null
     
     private var reminderCalendar: Calendar? = null
@@ -414,8 +417,8 @@ class EditNoteFragment : Fragment() {
     private fun updateFavoriteIcon() {
         val icon = if (isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite
         binding.btnFavorite.setIconResource(icon)
-        binding.btnFavorite.iconTint = ContextCompat.getColorStateList(requireContext(), 
-            if (isFavorite) R.color.priority_high else R.color.outlineLight)
+        binding.btnFavorite.iconTint =  ContextCompat.getColorStateList(requireContext(),
+            if (isFavorite) R.color.priority_high else R.color.outline)
     }
 
     private fun checkAudioPermission() {
@@ -511,6 +514,30 @@ class EditNoteFragment : Fragment() {
         }
     }
 
+    private val attachmentLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            analyzeAttachment(it)
+        }
+    }
+
+    private fun analyzeAttachment(uri: android.net.Uri) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val inputStream = requireContext().contentResolver.openInputStream(uri)
+                val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+                if (bitmap != null) {
+                    binding.tvSaveStatus.text = "AI Analyzing Image..."
+                    binding.tvSaveStatus.visibility = View.VISIBLE
+                    aiViewModel.analyzeImage(bitmap, "Analyze this image and extract any text or summarize its contents.")
+                } else {
+                    Toast.makeText(requireContext(), "Unsupported attachment", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Failed to load attachment", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private fun showAiAssistBottomSheet() {
         viewLifecycleOwner.lifecycleScope.launch {
             val consent = settingsManager.aiConsentGiven.first()
@@ -556,6 +583,11 @@ class EditNoteFragment : Fragment() {
                     dialog.dismiss()
                 }
 
+                bottomSheetBinding.cardAnalyzeAttachment.setOnClickListener {
+                    attachmentLauncher.launch("image/*")
+                    dialog.dismiss()
+                }
+
                 dialog.show()
             }
         }
@@ -591,13 +623,32 @@ class EditNoteFragment : Fragment() {
     private fun summarizeNote() {
         val content = binding.editTextDescription.text.toString()
         if (content.isBlank()) return
+        saveCurrentVersion("Before AI Summary")
         aiViewModel.summarize(content)
     }
 
     private fun improveWriting() {
         val content = binding.editTextDescription.text.toString()
         if (content.isBlank()) return
+        saveCurrentVersion("Before AI Polish")
         aiViewModel.improveGrammar(content)
+    }
+
+    private fun saveCurrentVersion(name: String) {
+        val noteId = currentNote?.id ?: return
+        val title = binding.editTextTitle.text.toString()
+        val content = Html.toHtml(binding.editTextDescription.text, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE)
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            saveNoteVersionUseCase(
+                com.example.knotes.domain.model.NoteVersion(
+                    noteId = noteId,
+                    title = title,
+                    content = content,
+                    versionName = name
+                )
+            )
+        }
     }
 
     private fun generateTagsFromAi() {
@@ -722,6 +773,15 @@ class EditNoteFragment : Fragment() {
                 }
                 R.id.action_color -> {
                     showNoteColorPicker()
+                    true
+                }
+                R.id.action_history -> {
+                    currentNote?.let {
+                        val action = EditNoteFragmentDirections.actionEditNoteFragmentToVersionHistoryFragment(it.id)
+                        findNavController().navigate(action)
+                    } ?: run {
+                        Toast.makeText(requireContext(), "Save the note first", Toast.LENGTH_SHORT).show()
+                    }
                     true
                 }
                 else -> false

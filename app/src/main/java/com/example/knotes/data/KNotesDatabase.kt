@@ -9,6 +9,7 @@ import com.example.knotes.data.dao.FolderDao
 import com.example.knotes.data.dao.NoteDao
 import com.example.knotes.data.dao.TaskDao
 import com.example.knotes.data.dao.SearchHistoryDao
+import com.example.knotes.data.dao.NoteVersionDao
 import com.example.knotes.data.entity.*
 
 @Database(
@@ -20,9 +21,10 @@ import com.example.knotes.data.entity.*
         Attachment::class,
         Tag::class,
         NoteTagCrossRef::class,
-        SearchHistory::class
+        SearchHistory::class,
+        NoteVersion::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -31,6 +33,7 @@ abstract class KNotesDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun folderDao(): FolderDao
     abstract fun searchHistoryDao(): SearchHistoryDao
+    abstract fun noteVersionDao(): NoteVersionDao
 
     companion object {
         @Volatile
@@ -42,8 +45,7 @@ abstract class KNotesDatabase : RoomDatabase() {
                     context.applicationContext,
                     KNotesDatabase::class.java,
                     "knotes_db"
-                ).fallbackToDestructiveMigration()
-                    .build()
+                ).build()
                 INSTANCE = instance
                 instance
             }

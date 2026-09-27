@@ -228,6 +228,10 @@ class NotesFragment : Fragment() {
                     Toast.makeText(requireContext(), "Voice search coming soon", Toast.LENGTH_SHORT).show()
                     true
                 }
+                R.id.action_ai_chat -> {
+                    findNavController().navigate(R.id.aiChatFragment)
+                    true
+                }
                 else -> false
             }
         }
@@ -384,18 +388,24 @@ class NotesFragment : Fragment() {
     }
 
     private fun startEmptyStateAnimation() {
+        if (_binding == null) return
+        
         val illustration = binding.layoutEmptyState.findViewById<View>(R.id.iv_empty_illustration)
         illustration?.animate()
             ?.scaleX(1.05f)
             ?.scaleY(1.05f)
             ?.setDuration(1500)
             ?.withEndAction {
-                illustration.animate()
-                    ?.scaleX(1f)
-                    ?.scaleY(1f)
-                    ?.setDuration(1500)
-                    ?.withEndAction { startEmptyStateAnimation() }
-                    ?.start()
+                if (_binding != null) {
+                    illustration.animate()
+                        ?.scaleX(1f)
+                        ?.scaleY(1f)
+                        ?.setDuration(1500)
+                        ?.withEndAction { 
+                            if (_binding != null) startEmptyStateAnimation() 
+                        }
+                        ?.start()
+                }
             }
             ?.start()
     }

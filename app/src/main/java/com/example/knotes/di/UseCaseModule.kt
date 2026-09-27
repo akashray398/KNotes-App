@@ -1,7 +1,9 @@
 package com.example.knotes.di
 
+import com.example.knotes.domain.repository.AiRepository
 import com.example.knotes.domain.repository.FolderRepository
 import com.example.knotes.domain.repository.NoteRepository
+import com.example.knotes.domain.repository.NoteVersionRepository
 import com.example.knotes.domain.repository.TaskRepository
 import com.example.knotes.domain.usecase.*
 import dagger.Module
@@ -49,4 +51,23 @@ object UseCaseModule {
     fun provideGetFoldersUseCase(repository: FolderRepository): GetFoldersUseCase {
         return GetFoldersUseCase(repository)
     }
+
+    @Provides
+    @Singleton
+    fun provideAiChatUseCase(
+        aiRepository: AiRepository,
+        noteRepository: NoteRepository
+    ): AiChatUseCase = AiChatUseCase(aiRepository, noteRepository)
+
+    @Provides
+    @Singleton
+    fun provideGetNoteVersionsUseCase(
+        repository: NoteVersionRepository
+    ): GetNoteVersionsUseCase = GetNoteVersionsUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun provideSaveNoteVersionUseCase(
+        repository: NoteVersionRepository
+    ): SaveNoteVersionUseCase = SaveNoteVersionUseCase(repository)
 }

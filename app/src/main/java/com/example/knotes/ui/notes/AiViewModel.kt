@@ -1,5 +1,6 @@
 package com.example.knotes.ui.notes
 
+import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.knotes.domain.usecase.ai.*
@@ -17,7 +18,8 @@ class AiViewModel @Inject constructor(
     private val generateTagsUseCase: GenerateTagsUseCase,
     private val extractTasksUseCase: ExtractTasksUseCase,
     private val generateTitleUseCase: GenerateTitleUseCase,
-    private val askAiQuestionUseCase: AskAiQuestionUseCase
+    private val askAiQuestionUseCase: AskAiQuestionUseCase,
+    private val analyzeImageUseCase: AnalyzeImageUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AiUiState>(AiUiState.Idle)
@@ -29,21 +31,35 @@ class AiViewModel @Inject constructor(
     
     fun rewrite(text: String, style: String) = performAiAction { rewriteNoteUseCase(text, style) }
     
-    fun generateTags(text: String) = viewModelScope.launch {
-        _uiState.value = AiUiState.Loading
-        generateTagsUseCase(text).onSuccess { tags ->
-            _uiState.value = AiUiState.TagsGenerated(tags)
-        }.onFailure { e ->
-            _uiState.value = AiUiState.Error(e.message ?: "Unknown error")
+    fun generateTags(text: String) {
+        if (_uiState.value is AiUiState.Loading) return
+        viewModelScope.launch {
+            _uiState.value = AiUiState.Loading
+            try {
+                generateTagsUseCase(text).onSuccess { tags ->
+                    _uiState.value = AiUiState.TagsGenerated(tags)
+                }.onFailure { e ->
+                    _uiState.value = AiUiState.Error(e.message ?: "Unable to generate tags.")
+                }
+            } catch (e: Exception) {
+                _uiState.value = AiUiState.Error(e.message ?: "An unexpected error occurred.")
+            }
         }
     }
     
-    fun extractTasks(text: String) = viewModelScope.launch {
-        _uiState.value = AiUiState.Loading
-        extractTasksUseCase(text).onSuccess { tasks ->
-            _uiState.value = AiUiState.TasksExtracted(tasks)
-        }.onFailure { e ->
-            _uiState.value = AiUiState.Error(e.message ?: "Unknown error")
+    fun extractTasks(text: String) {
+        if (_uiState.value is AiUiState.Loading) return
+        viewModelScope.launch {
+            _uiState.value = AiUiState.Loading
+            try {
+                extractTasksUseCase(text).onSuccess { tasks ->
+                    _uiState.value = AiUiState.TasksExtracted(tasks)
+                }.onFailure { e ->
+                    _uiState.value = AiUiState.Error(e.message ?: "Unable to extract tasks.")
+                }
+            } catch (e: Exception) {
+                _uiState.value = AiUiState.Error(e.message ?: "An unexpected error occurred.")
+            }
         }
     }
     
@@ -53,13 +69,22 @@ class AiViewModel @Inject constructor(
         askAiQuestionUseCase(noteContent, question) 
     }
 
+    fun analyzeImage(bitmap: Bitmap, prompt: String) = performAiAction {
+        analyzeImageUseCase(bitmap, prompt)
+    }
+
     private fun performAiAction(action: suspend () -> Result<String>) {
+        if (_uiState.value is AiUiState.Loading) return
         viewModelScope.launch {
             _uiState.value = AiUiState.Loading
-            action().onSuccess { result ->
-                _uiState.value = AiUiState.Success(result)
-            }.onFailure { e ->
-                _uiState.value = AiUiState.Error(e.message ?: "Unknown error")
+            try {
+                action().onSuccess { result ->
+                    _uiState.value = AiUiState.Success(result)
+                }.onFailure { e ->
+                    _uiState.value = AiUiState.Error(e.message ?: "Unable to complete AI action.")
+                }
+            } catch (e: Exception) {
+                _uiState.value = AiUiState.Error(e.message ?: "An unexpected error occurred.")
             }
         }
     }
@@ -68,12 +93,12 @@ class AiViewModel @Inject constructor(
         _uiState.value = AiUiState.Idle
     }
 
-    sealed class AiUiState {
-        object Idle : AiUiState()
-        object Loading : AiUiState()
-        data class Success(val output: String) : AiUiState()
-        data class TagsGenerated(val tags: List<String>) : AiUiState()
-        data class TasksExtracted(val tasks: List<String>) : AiUiState()
-        data class Error(val message: String) : AiUiState()
+    sealed interface AiUiState {
+        data object Idle : AiUiState
+        data object Loading : AiUiState
+        data class Success(val output: String) : AiUiState
+        data class TagsGenerated(val tags: List<String>) : AiUiState
+        data class TasksExtracted(val tasks: List<String>) : AiUiState
+        data class Error(val message: String) : AiUiState
     }
 }

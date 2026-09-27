@@ -22,6 +22,9 @@ android {
         
         val apiKey = project.findProperty("AI_API_KEY") ?: System.getenv("AI_API_KEY") ?: ""
         buildConfigField("String", "AI_API_KEY", "\"$apiKey\"")
+        
+        val groqKey = project.findProperty("GROQ_API_KEY") ?: System.getenv("GROQ_API_KEY") ?: ""
+        buildConfigField("String", "GROQ_API_KEY", "\"$groqKey\"")
     }
 
     buildTypes {
@@ -116,6 +119,9 @@ dependencies {
     implementation(libs.firebase.auth)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

@@ -9,6 +9,9 @@ import android.os.Looper
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.core.content.ContextCompat
 import com.example.knotes.databinding.ActivitySplashBinding
 import com.example.knotes.util.PreferenceManager
@@ -36,9 +39,10 @@ class SplashActivity : AppCompatActivity() {
         startAnimations()
 
         // Delayed transition (2 seconds)
-        Handler(Looper.getMainLooper()).postDelayed({
+        lifecycleScope.launch {
+            delay(2000)
             checkSecurityAndProceed()
-        }, 2000)
+        }
     }
 
     private fun setupUI() {

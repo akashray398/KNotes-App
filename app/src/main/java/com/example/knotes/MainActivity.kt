@@ -147,8 +147,8 @@ class MainActivity : AppCompatActivity() {
         binding.composeOnboarding.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                val onboardingCompleted by settingsManager.onboardingCompleted.collectAsState(initial = true)
-                if (!onboardingCompleted) {
+                val onboardingCompleted by settingsManager.onboardingCompleted.collectAsState(initial = null)
+                if (onboardingCompleted == false) {
                     OnboardingScreen(
                         onFinished = {
                             lifecycleScope.launch {

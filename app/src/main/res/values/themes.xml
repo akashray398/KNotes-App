@@ -2,22 +2,29 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.KNotes" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/primaryLight</item>
-        <item name="colorOnPrimary">@color/onPrimaryLight</item>
-        <item name="colorPrimaryContainer">@color/primaryContainerLight</item>
-        <item name="colorOnPrimaryContainer">@color/onPrimaryContainerLight</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/onPrimary</item>
+        <item name="colorPrimaryContainer">@color/primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/onPrimaryContainer</item>
 
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/secondaryLight</item>
-        <item name="colorOnSecondary">@color/onSecondaryLight</item>
-        <item name="colorSecondaryContainer">@color/secondaryContainerLight</item>
-        <item name="colorOnSecondaryContainer">@color/onSecondaryContainerLight</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/onSecondary</item>
+        <item name="colorSecondaryContainer">@color/secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/onSecondaryContainer</item>
 
         <!-- Tertiary brand color. -->
-        <item name="colorTertiary">@color/tertiaryLight</item>
-        <item name="colorOnTertiary">@color/onTertiaryLight</item>
-        <item name="colorTertiaryContainer">@color/tertiaryContainerLight</item>
-        <item name="colorOnTertiaryContainer">@color/onTertiaryContainerLight</item>
+        <item name="colorTertiary">@color/tertiary</item>
+        <item name="colorOnTertiary">@color/onTertiary</item>
+        <item name="colorTertiaryContainer">@color/tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/onTertiaryContainer</item>
+
+        <item name="android:windowBackground">@color/background</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/onSurface</item>
+        <item name="colorSurfaceVariant">@color/surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/onSurfaceVariant</item>
+        <item name="colorOutline">@color/outline</item>
 
         <!-- Status bar and navigation bar. -->
         <item name="android:statusBarColor">?attr/colorSurface</item>
