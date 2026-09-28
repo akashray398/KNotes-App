@@ -8,6 +8,7 @@ data class Task(
     val priority: Priority = Priority.MEDIUM,
     val deadline: Long? = null,
     val reminderTime: Long? = null,
+    val secondaryReminderTime: Long? = null,
     val recurrence: Recurrence = Recurrence.NONE,
     val createdTime: Long = System.currentTimeMillis(),
     val updatedTime: Long = System.currentTimeMillis(),

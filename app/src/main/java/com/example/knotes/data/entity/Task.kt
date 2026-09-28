@@ -12,6 +12,7 @@ data class Task(
     val description: String = "",
     val deadline: Long? = null,
     val reminderTime: Long? = null,
+    val secondaryReminderTime: Long? = null,
     val isCompleted: Boolean = false,
     val priority: Priority = Priority.MEDIUM,
     val recurrence: Recurrence = Recurrence.NONE,

@@ -118,14 +118,20 @@ class TasksViewModel @Inject constructor(
     }
 
     suspend fun insertTask(task: Task): Long {
-        return repository.insertTask(task)
+        val id = repository.insertTask(task)
+        val insertedTask = task.copy(id = id.toInt())
+        taskReminderManager.scheduleTaskReminders(insertedTask)
+        return id
     }
 
     fun updateTask(task: Task) = viewModelScope.launch {
         repository.updateTask(task)
+        taskReminderManager.cancelTaskReminders(task)
+        taskReminderManager.scheduleTaskReminders(task)
     }
 
     fun deleteTask(task: Task) = viewModelScope.launch {
+        taskReminderManager.cancelTaskReminders(task)
         repository.deleteTask(task)
     }
 
@@ -133,33 +139,30 @@ class TasksViewModel @Inject constructor(
         val newCompletedState = !task.isCompleted
         
         if (newCompletedState && task.recurrence != com.example.knotes.domain.model.Recurrence.NONE) {
-            // It's a recurring task being completed -> schedule next occurrence
-            val nextDeadline = com.example.knotes.util.RecurrenceHelper.getNextOccurrence(task.deadline, com.example.knotes.data.entity.Recurrence.valueOf(task.recurrence.name))
-            val updatedTask = task.copy(deadline = nextDeadline, isCompleted = false)
+            // Recurring task completed -> advance to next occurrence
+            val entityRecurrence = com.example.knotes.data.entity.Recurrence.valueOf(task.recurrence.name)
+            val nextReminder = com.example.knotes.util.RecurrenceHelper.getNextOccurrence(task.reminderTime ?: task.deadline, entityRecurrence)
+            val nextDeadline = com.example.knotes.util.RecurrenceHelper.getNextOccurrence(task.deadline, entityRecurrence)
+            val updatedTask = task.copy(
+                reminderTime = nextReminder,
+                deadline = nextDeadline ?: task.deadline,
+                isCompleted = false
+            )
             repository.updateTask(updatedTask)
             
-            // Reschedule reminders for the next occurrence
             taskReminderManager.cancelTaskReminders(task)
             taskReminderManager.scheduleTaskReminders(updatedTask)
             
-            showCompletionCelebration(task.title)
             streakManager.checkAndUpdateStreak()
         } else {
             repository.updateTaskCompletion(task.id, newCompletedState)
             if (newCompletedState) {
                 taskReminderManager.cancelTaskReminders(task)
-                showCompletionCelebration(task.title)
                 streakManager.checkAndUpdateStreak()
             } else {
-                taskReminderManager.scheduleTaskReminders(task)
+                taskReminderManager.scheduleTaskReminders(task.copy(isCompleted = false))
             }
         }
-    }
-
-    private fun showCompletionCelebration(title: String) {
-        // We'll use a static method from NotificationHelper to avoid passing context
-        // But NotificationHelper needs context. For now, we'll assume the fragment handles UI celebration
-        // and ViewModel sends a "nudge" to Fragment or system notification.
     }
 
     suspend fun getTaskById(id: Int): Task? = repository.getTaskById(id)

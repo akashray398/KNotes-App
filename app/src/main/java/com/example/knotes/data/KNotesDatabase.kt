@@ -24,7 +24,7 @@ import com.example.knotes.data.entity.*
         SearchHistory::class,
         NoteVersion::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -45,7 +45,7 @@ abstract class KNotesDatabase : RoomDatabase() {
                     context.applicationContext,
                     KNotesDatabase::class.java,
                     "knotes_db"
-                ).build()
+                ).fallbackToDestructiveMigration().build()
                 INSTANCE = instance
                 instance
             }

@@ -16,10 +16,12 @@ fun TaskEntity.toDomain(): TaskDomain {
         priority = PriorityDomain.valueOf(priority.name),
         deadline = deadline,
         reminderTime = reminderTime,
+        secondaryReminderTime = secondaryReminderTime,
         recurrence = RecurrenceDomain.valueOf(recurrence.name),
         createdTime = createdTime,
         updatedTime = updatedTime,
-        relatedNoteId = relatedNoteId
+        relatedNoteId = relatedNoteId,
+        tags = tags
     )
 }
 
@@ -32,9 +34,11 @@ fun TaskDomain.toEntity(): TaskEntity {
         priority = PriorityEntity.valueOf(priority.name),
         deadline = deadline,
         reminderTime = reminderTime,
+        secondaryReminderTime = secondaryReminderTime,
         recurrence = RecurrenceEntity.valueOf(recurrence.name),
         createdTime = createdTime,
         updatedTime = updatedTime,
-        relatedNoteId = relatedNoteId
+        relatedNoteId = relatedNoteId,
+        tags = tags
     )
 }
