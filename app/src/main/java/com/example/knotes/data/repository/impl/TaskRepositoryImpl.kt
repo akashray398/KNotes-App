@@ -14,6 +14,7 @@ import javax.inject.Singleton
 class TaskRepositoryImpl @Inject constructor(
     private val taskDao: TaskDao
 ) : TaskRepository {
+
     override fun getAllTasks(): Flow<List<Task>> = 
         taskDao.getAllTasks().map { list -> list.map { it.toDomain() } }
 
@@ -33,10 +34,7 @@ class TaskRepositoryImpl @Inject constructor(
         taskDao.deleteTask(task.toEntity())
 
     override suspend fun updateTaskCompletion(id: Int, isCompleted: Boolean) {
-        val task = taskDao.getTaskById(id)
-        if (task != null) {
-            taskDao.updateTask(task.copy(isCompleted = isCompleted, updatedTime = System.currentTimeMillis(), isSynced = false))
-        }
+        taskDao.updateTaskCompletion(id, isCompleted, System.currentTimeMillis())
     }
 
     override fun getCompletedTasksCount(): Flow<Int> = taskDao.getCompletedTasksCount()

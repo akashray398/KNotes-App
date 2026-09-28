@@ -33,8 +33,8 @@ interface TaskDao {
     @Delete
     suspend fun deleteTask(task: Task)
 
-    @Query("UPDATE tasks SET isCompleted = :isCompleted WHERE id = :id")
-    suspend fun updateTaskCompletion(id: Int, isCompleted: Boolean)
+    @Query("UPDATE tasks SET isCompleted = :isCompleted, lastModified = :updatedTime WHERE id = :id")
+    suspend fun updateTaskCompletion(id: Int, isCompleted: Boolean, updatedTime: Long = System.currentTimeMillis())
 
     @Query("SELECT COUNT(*) FROM tasks WHERE isCompleted = 1")
     fun getCompletedTasksCount(): Flow<Int>
