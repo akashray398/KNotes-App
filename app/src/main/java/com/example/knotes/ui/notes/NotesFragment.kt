@@ -5,8 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.PopupMenu
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -22,26 +20,17 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.knotes.R
-import com.example.knotes.data.repository.SyncRepository
 import com.example.knotes.databinding.BottomSheetSortFilterBinding
 import com.example.knotes.databinding.FragmentNotesBinding
 import com.example.knotes.domain.model.Note
-import com.example.knotes.domain.usecase.ExportDataUseCase
-import com.example.knotes.domain.usecase.ImportDataUseCase
 import com.example.knotes.ui.components.DashboardCompose
-import com.example.knotes.ui.components.HomeTopBarCompose
-import com.example.knotes.ui.components.QuickFeatureHubBottomSheet
 import com.example.knotes.util.HapticHelper
-import com.example.knotes.util.SettingsManager
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.chip.Chip
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class NotesFragment : Fragment() {
@@ -53,62 +42,6 @@ class NotesFragment : Fragment() {
     private lateinit var adapter: NotesAdapter
     private lateinit var pinnedAdapter: NotesAdapter
     private lateinit var searchAdapter: NotesAdapter
-
-    @Inject
-    lateinit var settingsManager: SettingsManager
-
-    @Inject
-    lateinit var syncRepository: SyncRepository
-
-    @Inject
-    lateinit var exportDataUseCase: ExportDataUseCase
-
-    @Inject
-    lateinit var importDataUseCase: ImportDataUseCase
-
-    @Inject
-    @JvmField
-    var auth: FirebaseAuth? = null
-
-    private var isFeatureHubOpen by mutableStateOf(false)
-
-    private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        uri?.let {
-            viewLifecycleOwner.lifecycleScope.launch {
-                try {
-                    val outputStream = requireContext().contentResolver.openOutputStream(it)
-                    if (outputStream != null) {
-                        exportDataUseCase(outputStream).onSuccess {
-                            Toast.makeText(requireContext(), "Data exported successfully", Toast.LENGTH_SHORT).show()
-                        }.onFailure { e ->
-                            Toast.makeText(requireContext(), "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(requireContext(), "Export failed", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    private val importLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let {
-            viewLifecycleOwner.lifecycleScope.launch {
-                try {
-                    val inputStream = requireContext().contentResolver.openInputStream(it)
-                    if (inputStream != null) {
-                        importDataUseCase(inputStream).onSuccess {
-                            Toast.makeText(requireContext(), "Data imported successfully", Toast.LENGTH_SHORT).show()
-                        }.onFailure { e ->
-                            Toast.makeText(requireContext(), "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(requireContext(), "Import failed", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -122,7 +55,6 @@ class NotesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupTopBar()
         setupRecyclerViews()
         setupFab()
         setupSearch()
@@ -131,80 +63,6 @@ class NotesFragment : Fragment() {
         setupSwipeActions()
         setupPullToRefresh()
         observeViewModel()
-    }
-
-    private fun setupTopBar() {
-        binding.composeTopBar.apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                val dashboardState by viewModel.dashboardState.collectAsState()
-                val themeMode by settingsManager.themeMode.collectAsState(initial = 0)
-                val isAiEnabled by settingsManager.isAiEnabled.collectAsState(initial = false)
-                val aiConsentGiven by settingsManager.aiConsentGiven.collectAsState(initial = false)
-
-                HomeTopBarCompose(
-                    state = dashboardState,
-                    onOpenFeatureHub = {
-                        HapticHelper.lightTick(binding.root)
-                        isFeatureHubOpen = true
-                    }
-                )
-
-                if (isFeatureHubOpen) {
-                    QuickFeatureHubBottomSheet(
-                        dashboardState = dashboardState,
-                        currentThemeMode = themeMode,
-                        isAiEnabled = isAiEnabled,
-                        aiConsentGiven = aiConsentGiven,
-                        isCloudSyncActive = auth?.currentUser != null,
-                        onSetThemeMode = { mode ->
-                            lifecycleScope.launch {
-                                settingsManager.setThemeMode(mode)
-                                val nightMode = when (mode) {
-                                    1 -> AppCompatDelegate.MODE_NIGHT_NO
-                                    2 -> AppCompatDelegate.MODE_NIGHT_YES
-                                    else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                                }
-                                AppCompatDelegate.setDefaultNightMode(nightMode)
-                            }
-                        },
-                        onToggleAiEnabled = { enabled ->
-                            lifecycleScope.launch {
-                                settingsManager.setAiEnabled(enabled)
-                            }
-                        },
-                        onTriggerSync = {
-                            syncRepository.startSync()
-                            Toast.makeText(requireContext(), "Cloud Sync initiated", Toast.LENGTH_SHORT).show()
-                        },
-                        onNavigateToSettings = {
-                            findNavController().navigate(R.id.settingsFragment)
-                        },
-                        onNavigateToArchive = {
-                            findNavController().navigate(R.id.archiveFragment)
-                        },
-                        onNavigateToTrash = {
-                            findNavController().navigate(R.id.trashFragment)
-                        },
-                        onNavigateToFolders = {
-                            findNavController().navigate(R.id.foldersFragment)
-                        },
-                        onNavigateToAiChat = {
-                            findNavController().navigate(R.id.aiChatFragment)
-                        },
-                        onExportData = {
-                            exportLauncher.launch("knotes_backup_${System.currentTimeMillis()}.json")
-                        },
-                        onImportData = {
-                            importLauncher.launch(arrayOf("application/json"))
-                        },
-                        onDismiss = {
-                            isFeatureHubOpen = false
-                        }
-                    )
-                }
-            }
-        }
     }
 
     private fun setupPullToRefresh() {
@@ -354,6 +212,8 @@ class NotesFragment : Fragment() {
     }
 
     private fun setupToolbarActions() {
+        binding.btnFilterMenu.setOnClickListener { showSortFilterBottomSheet() }
+
         binding.searchBar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.action_layout -> {
@@ -483,6 +343,12 @@ class NotesFragment : Fragment() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.totalNotesCount.collect { count ->
+                        binding.tvSummary.text = getString(R.string.total_notes_count, count)
+                    }
+                }
+
                 launch {
                     viewModel.notes.collect { notes ->
                         val pinned = notes.filter { it.isPinned }

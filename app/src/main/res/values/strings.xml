@@ -2,6 +2,7 @@
     <string name="app_name">KNotes</string>
     <string name="completed_tasks_count">Completed (%1$d)</string>
     <string name="tasks_summary">%1$d pending • %2$d completed today</string>
+    <string name="total_notes_count">%1$d total notes</string>
     <string name="percent_format">%1$d%%</string>
     <string name="edited_label">Edited %1$s</string>
     <string name="word_count">%1$d words</string>

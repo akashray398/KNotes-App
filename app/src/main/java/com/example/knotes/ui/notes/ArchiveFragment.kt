@@ -39,10 +39,10 @@ class ArchiveFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Hide dashboard, FAB, and top bar as they are not needed in Archive screen
         binding.composeDashboard.visibility = View.GONE
         binding.fabAddNote.visibility = View.GONE
-        binding.composeTopBar.visibility = View.GONE
+        binding.tvTitle.text = getString(R.string.archive)
+        binding.tvSummary.text = getString(R.string.archived_notes_subtitle)
 
         setupRecyclerView()
         setupSwipeActions()

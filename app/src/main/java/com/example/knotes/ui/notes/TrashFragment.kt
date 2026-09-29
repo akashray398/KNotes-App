@@ -12,6 +12,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.knotes.R
 import com.example.knotes.domain.model.Note
 import com.example.knotes.databinding.FragmentNotesBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -41,7 +42,8 @@ class TrashFragment : Fragment() {
 
         binding.composeDashboard.visibility = View.GONE
         binding.fabAddNote.visibility = View.GONE
-        binding.composeTopBar.visibility = View.GONE
+        binding.tvTitle.text = getString(R.string.trash)
+        binding.tvSummary.text = getString(R.string.trash_subtitle)
 
         setupRecyclerView()
         setupSwipeActions()
