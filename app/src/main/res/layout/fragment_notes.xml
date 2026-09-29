@@ -15,48 +15,12 @@
         android:fitsSystemWindows="true"
         app:elevation="0dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/compose_top_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/splash_glow"
-            android:backgroundTint="#0A6750A4"
-            android:paddingHorizontal="16dp"
-            android:paddingTop="16dp">
-
-            <TextView
-                android:id="@+id/tv_greeting"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="Hello, Akash 👋"
-                android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toStartOf="@id/iv_profile"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/tv_subtitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Let's capture some ideas today"
-                android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-                android:alpha="0.7"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_greeting" />
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/iv_profile"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_app_logo"
-                android:contentDescription="@string/desc_profile_picture"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
+            android:backgroundTint="#0A6750A4" />
 
         <com.google.android.material.search.SearchBar
             android:id="@+id/search_bar"
