@@ -6,7 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -17,8 +19,6 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.knotes.R
-import com.example.knotes.domain.model.Priority
-import com.example.knotes.domain.model.Task
 import com.example.knotes.databinding.FragmentTasksBinding
 import com.google.android.material.chip.Chip
 import dagger.hilt.android.AndroidEntryPoint
@@ -62,7 +62,7 @@ class TasksFragment : Fragment() {
 
     private fun checkPermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            if (androidx.core.content.ContextCompat.checkSelfPermission(
+            if (ContextCompat.checkSelfPermission(
                     requireContext(),
                     android.Manifest.permission.POST_NOTIFICATIONS
                 ) != android.content.pm.PackageManager.PERMISSION_GRANTED
@@ -82,7 +82,7 @@ class TasksFragment : Fragment() {
 
     private fun setupPullToRefresh() {
         binding.swipeRefreshTasks.apply {
-            setColorSchemeColors(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.purple_6750A4))
+            setColorSchemeColors(ContextCompat.getColor(requireContext(), R.color.purple_6750A4))
             setOnRefreshListener {
                 viewLifecycleOwner.lifecycleScope.launch {
                     kotlinx.coroutines.delay(800)
@@ -156,8 +156,8 @@ class TasksFragment : Fragment() {
     }
 
     private fun setupSearch() {
-        binding.searchBar.setOnClickListener {
-            findNavController().navigate(R.id.searchFragment)
+        binding.searchView.editText.addTextChangedListener { text ->
+            viewModel.updateSearchQuery(text?.toString() ?: "")
         }
     }
 
@@ -264,7 +264,7 @@ class TasksFragment : Fragment() {
                         val percent = stats.third
                         
                         binding.tvSummary.text = getString(R.string.tasks_summary, pending, completed)
-                        binding.progressIndicator.progress = percent
+                        binding.progressIndicator.setProgress(percent, true)
                         binding.tvProgressPercent.text = getString(R.string.percent_format, percent)
                         binding.tvMotivation.text = when {
                             percent >= 100 -> "Incredible! Everything is done. 🎉"

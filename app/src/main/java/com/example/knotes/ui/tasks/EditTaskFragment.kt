@@ -20,7 +20,6 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
-import com.example.knotes.util.TaskReminderManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -62,25 +61,25 @@ class EditTaskFragment : Fragment() {
         if (taskId != -1) {
             loadTask(taskId)
         } else {
-            selectedDeadline = getStartOfTomorrow()
+            selectedDeadline = getDefaultFutureDeadline()
             updateDeadlineText()
         }
 
         setupListeners()
     }
 
-    private fun getStartOfTomorrow(): Long {
+    private fun getDefaultFutureDeadline(): Long {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_YEAR, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 9)
+        calendar.set(Calendar.HOUR_OF_DAY, 18) // Default 6 PM
         calendar.set(Calendar.MINUTE, 0)
         calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
         return calendar.timeInMillis
     }
 
     private fun setupListeners() {
-        binding.toolbar.inflateMenu(R.menu.menu_edit_note_more) // Reusing note menu for simplicity or create a task specific one
-        // Better create a task specific one or just add delete to toolbar
+        binding.toolbar.inflateMenu(R.menu.menu_edit_note_more)
         binding.toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.action_delete -> {
@@ -136,10 +135,10 @@ class EditTaskFragment : Fragment() {
                     selectedDeadline = it.deadline ?: System.currentTimeMillis()
                     selectedReminder = it.reminderTime
                     selectedNoteId = it.relatedNoteId
-                    
+
                     updateDeadlineText()
                     updateReminderText()
-                    
+
                     binding.switchReminders.isChecked = selectedReminder != null
                     binding.layoutReminderTime.visibility = if (selectedReminder != null) View.VISIBLE else View.GONE
 
@@ -173,8 +172,9 @@ class EditTaskFragment : Fragment() {
 
     private fun showTimePicker() {
         val calendar = Calendar.getInstance()
-        selectedReminder?.let { calendar.timeInMillis = it }
-        
+        val initTime = selectedReminder ?: selectedDeadline
+        calendar.timeInMillis = initTime
+
         val timePicker = MaterialTimePicker.Builder()
             .setTimeFormat(TimeFormat.CLOCK_12H)
             .setHour(calendar.get(Calendar.HOUR_OF_DAY))
@@ -187,11 +187,56 @@ class EditTaskFragment : Fragment() {
             cal.timeInMillis = selectedDeadline
             cal.set(Calendar.HOUR_OF_DAY, timePicker.hour)
             cal.set(Calendar.MINUTE, timePicker.minute)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+
+            selectedDeadline = cal.timeInMillis
             selectedReminder = cal.timeInMillis
+            updateDeadlineText()
             updateReminderText()
         }
 
         timePicker.show(parentFragmentManager, "TIME_PICKER")
+    }
+
+    private fun showDatePicker() {
+        val datePicker = MaterialDatePicker.Builder.datePicker()
+            .setTitleText("Select Deadline Date")
+            .setSelection(selectedDeadline)
+            .build()
+
+        datePicker.addOnPositiveButtonClickListener { pickerSelection ->
+            val oldCal = Calendar.getInstance().apply { timeInMillis = selectedDeadline }
+            val hour = oldCal.get(Calendar.HOUR_OF_DAY)
+            val minute = oldCal.get(Calendar.MINUTE)
+
+            val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                timeInMillis = pickerSelection
+            }
+
+            val newCal = Calendar.getInstance().apply {
+                set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), hour, minute, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+
+            selectedDeadline = newCal.timeInMillis
+
+            if (selectedReminder != null) {
+                val remCal = Calendar.getInstance().apply { timeInMillis = selectedReminder!! }
+                val remHour = remCal.get(Calendar.HOUR_OF_DAY)
+                val remMin = remCal.get(Calendar.MINUTE)
+                val newRemCal = Calendar.getInstance().apply {
+                    set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), remHour, remMin, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                selectedReminder = newRemCal.timeInMillis
+            }
+
+            updateDeadlineText()
+            updateReminderText()
+        }
+
+        datePicker.show(parentFragmentManager, "DATE_PICKER")
     }
 
     private fun showNoteSelector() {
@@ -199,7 +244,7 @@ class EditTaskFragment : Fragment() {
             try {
                 val notes = getNotesUseCase().first()
                 val noteTitles = notes.map { it.title }.toTypedArray()
-                
+
                 com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Select Note to Link")
                     .setItems(noteTitles) { _, which ->
@@ -224,40 +269,26 @@ class EditTaskFragment : Fragment() {
             binding.buttonLinkNote.text = "Linked: $title"
         } else {
             selectedNoteId?.let { id ->
-                 viewLifecycleOwner.lifecycleScope.launch {
-                     try {
-                         val notes = getNotesUseCase().first()
-                         val note = notes.find { it.id == id }
-                         binding.buttonLinkNote.text = note?.let { "Linked: ${it.title}" } ?: "Select Note"
-                     } catch (e: Exception) {
-                         binding.buttonLinkNote.text = "Linked to Note ID: $id"
-                     }
-                 }
+                viewLifecycleOwner.lifecycleScope.launch {
+                    try {
+                        val notes = getNotesUseCase().first()
+                        val note = notes.find { it.id == id }
+                        binding.buttonLinkNote.text = note?.let { "Linked: ${it.title}" } ?: "Select Note"
+                    } catch (e: Exception) {
+                        binding.buttonLinkNote.text = "Linked to Note ID: $id"
+                    }
+                }
             }
         }
     }
 
     private fun updateReminderText() {
         selectedReminder?.let {
-            val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
+            val sdf = SimpleDateFormat("MMM dd, yyyy h:mm a", Locale.getDefault())
             binding.textViewReminderTime.text = sdf.format(Date(it))
         } ?: run {
             binding.textViewReminderTime.text = "Not set"
         }
-    }
-
-    private fun showDatePicker() {
-        val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setTitleText("Select Deadline")
-            .setSelection(selectedDeadline)
-            .build()
-
-        datePicker.addOnPositiveButtonClickListener {
-            selectedDeadline = it
-            updateDeadlineText()
-        }
-
-        datePicker.show(parentFragmentManager, "DATE_PICKER")
     }
 
     private fun updateDeadlineText() {
