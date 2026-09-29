@@ -45,6 +45,9 @@ class TasksViewModel @Inject constructor(
     private val _taskFilter = MutableStateFlow(TaskFilter.ALL)
     val taskFilter = _taskFilter.asStateFlow()
 
+    val allTasks = repository.getAllTasks()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val tasks = combine(_searchQuery, _priorityFilter, _sortOrder, _taskFilter) { query, priority, sort, filter ->
         Quadruple(query, priority, sort, filter)

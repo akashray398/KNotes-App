@@ -99,7 +99,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="1dp"
@@ -148,6 +148,14 @@
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- Next Up Task Indicator -->
+            <androidx.compose.ui.platform.ComposeView
+                android:id="@+id/compose_next_up"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp" />
 
             <!-- Filter Chips -->
             <HorizontalScrollView

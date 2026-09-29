@@ -6,6 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.core.widget.addTextChangedListener
@@ -20,6 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.knotes.R
 import com.example.knotes.databinding.FragmentTasksBinding
+import com.example.knotes.ui.components.NextUpTaskCompose
 import com.google.android.material.chip.Chip
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -53,6 +57,7 @@ class TasksFragment : Fragment() {
         setupRecyclerViews()
         setupFab()
         setupSearch()
+        setupNextUpCard()
         setupFilters()
         setupToolbarActions()
         setupSwipeActions()
@@ -77,6 +82,21 @@ class TasksFragment : Fragment() {
     ) { isGranted: Boolean ->
         if (!isGranted) {
             Toast.makeText(requireContext(), "Reminders might not work without notification permission", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun setupNextUpCard() {
+        binding.composeNextUp.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val tasks by viewModel.allTasks.collectAsState(initial = emptyList())
+                NextUpTaskCompose(
+                    tasks = tasks,
+                    onTaskClick = { taskId ->
+                        navigateToEdit(taskId)
+                    }
+                )
+            }
         }
     }
 
