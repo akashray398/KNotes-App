@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -42,8 +44,18 @@ class TrashFragment : Fragment() {
 
         binding.composeDashboard.visibility = View.GONE
         binding.fabAddNote.visibility = View.GONE
-        binding.tvTitle.text = getString(R.string.trash)
-        binding.tvSummary.text = getString(R.string.trash_subtitle)
+
+        binding.composeNotesHeader.apply {
+            setViewCompositionStrategy(androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val notes by viewModel.trashedNotes.collectAsState(initial = emptyList())
+                com.example.knotes.ui.components.NotesTopBarCompose(
+                    title = getString(R.string.trash),
+                    subtitle = getString(R.string.trash_subtitle),
+                    totalNotes = notes.size
+                )
+            }
+        }
 
         setupRecyclerView()
         setupSwipeActions()

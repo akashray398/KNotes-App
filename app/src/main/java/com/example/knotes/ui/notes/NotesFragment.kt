@@ -24,6 +24,7 @@ import com.example.knotes.databinding.BottomSheetSortFilterBinding
 import com.example.knotes.databinding.FragmentNotesBinding
 import com.example.knotes.domain.model.Note
 import com.example.knotes.ui.components.DashboardCompose
+import com.example.knotes.ui.components.NotesTopBarCompose
 import com.example.knotes.util.HapticHelper
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.chip.Chip
@@ -55,6 +56,7 @@ class NotesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupNotesHeader()
         setupRecyclerViews()
         setupFab()
         setupSearch()
@@ -63,6 +65,27 @@ class NotesFragment : Fragment() {
         setupSwipeActions()
         setupPullToRefresh()
         observeViewModel()
+    }
+
+    private fun setupNotesHeader() {
+        binding.composeNotesHeader.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val totalCount by viewModel.totalNotesCount.collectAsState(initial = 0)
+                val notes by viewModel.notes.collectAsState(initial = emptyList())
+                val pinnedCount = remember(notes) { notes.count { it.isPinned } }
+                val isGrid by viewModel.isGridView.collectAsState()
+
+                NotesTopBarCompose(
+                    totalNotes = totalCount,
+                    pinnedCount = pinnedCount,
+                    isGridView = isGrid,
+                    onFilterClick = { showSortFilterBottomSheet() },
+                    onToggleLayoutClick = { viewModel.setGridView(!isGrid) },
+                    onAiChatClick = { findNavController().navigate(R.id.aiChatFragment) }
+                )
+            }
+        }
     }
 
     private fun setupPullToRefresh() {
@@ -217,8 +240,6 @@ class NotesFragment : Fragment() {
     }
 
     private fun setupToolbarActions() {
-        binding.btnFilterMenu.setOnClickListener { showSortFilterBottomSheet() }
-
         binding.searchBar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.action_layout -> {
@@ -348,12 +369,6 @@ class NotesFragment : Fragment() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    viewModel.totalNotesCount.collect { count ->
-                        binding.tvSummary.text = getString(R.string.total_notes_count, count)
-                    }
-                }
-
                 launch {
                     viewModel.notes.collect { notes ->
                         val pinned = notes.filter { it.isPinned }

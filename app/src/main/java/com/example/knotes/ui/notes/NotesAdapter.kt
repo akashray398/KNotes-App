@@ -85,21 +85,37 @@ class NotesAdapter(
 
                 root.setOnClickListener { 
                     com.example.knotes.util.HapticHelper.lightTick(it)
-                    onNoteClick(note) 
+                    animateTap(it) { onNoteClick(note) }
                 }
                 imageViewPin.setOnClickListener { 
                     com.example.knotes.util.HapticHelper.lightTick(it)
-                    onPinClick(note) 
+                    animateTap(it) { onPinClick(note) }
                 }
                 ivFavorite.setOnClickListener { 
                     com.example.knotes.util.HapticHelper.lightTick(it)
-                    onFavoriteClick?.invoke(note) 
+                    animateTap(it) { onFavoriteClick?.invoke(note) }
                 }
                 ivMore.setOnClickListener {
                     com.example.knotes.util.HapticHelper.lightTick(it)
-                    onMoreClick?.invoke(note, it)
+                    animateTap(it) { onMoreClick?.invoke(note, it) }
                 }
             }
+        }
+
+        private fun animateTap(view: View, action: () -> Unit) {
+            view.animate()
+                .scaleX(0.95f)
+                .scaleY(0.95f)
+                .setDuration(70)
+                .withEndAction {
+                    view.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(70)
+                        .withEndAction { action() }
+                        .start()
+                }
+                .start()
         }
 
         private fun formatDate(timestamp: Long): String {
