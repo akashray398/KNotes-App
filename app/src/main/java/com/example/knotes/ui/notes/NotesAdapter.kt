@@ -67,8 +67,12 @@ class NotesAdapter(
                         isCheckable = false
                         setEnsureMinTouchTargetSize(false)
                         setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelSmall)
-                        val primaryColor = ContextCompat.getColor(context, R.color.purple_6750A4)
-                        val backgroundColor = ColorUtils.setAlphaComponent(primaryColor, 20)
+                        val primaryColor = com.google.android.material.color.MaterialColors.getColor(
+                            context,
+                            androidx.appcompat.R.attr.colorPrimary,
+                            ContextCompat.getColor(context, R.color.primary)
+                        )
+                        val backgroundColor = ColorUtils.setAlphaComponent(primaryColor, 30)
                         chipBackgroundColor = ColorStateList.valueOf(backgroundColor)
                         chipStrokeWidth = 0f
                         setTextColor(primaryColor)

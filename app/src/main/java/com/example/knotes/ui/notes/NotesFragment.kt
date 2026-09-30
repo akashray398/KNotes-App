@@ -67,7 +67,12 @@ class NotesFragment : Fragment() {
 
     private fun setupPullToRefresh() {
         binding.swipeRefreshNotes.apply {
-            setColorSchemeColors(ContextCompat.getColor(requireContext(), R.color.purple_6750A4))
+            val primaryColor = com.google.android.material.color.MaterialColors.getColor(
+                requireContext(),
+                androidx.appcompat.R.attr.colorPrimary,
+                ContextCompat.getColor(requireContext(), R.color.primary)
+            )
+            setColorSchemeColors(primaryColor)
             setOnRefreshListener {
                 viewLifecycleOwner.lifecycleScope.launch {
                     delay(800)
@@ -426,9 +431,20 @@ class NotesFragment : Fragment() {
             else -> "🔥 Daily Streak increased to $streak!"
         }
         
+        val primaryColor = com.google.android.material.color.MaterialColors.getColor(
+            requireContext(),
+            androidx.appcompat.R.attr.colorPrimary,
+            ContextCompat.getColor(requireContext(), R.color.primary)
+        )
+        val onPrimaryColor = com.google.android.material.color.MaterialColors.getColor(
+            requireContext(),
+            com.google.android.material.R.attr.colorOnPrimary,
+            ContextCompat.getColor(requireContext(), R.color.onPrimary)
+        )
+        
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
-            .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.purple_6750A4))
-            .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+            .setBackgroundTint(primaryColor)
+            .setTextColor(onPrimaryColor)
             .show()
     }
 

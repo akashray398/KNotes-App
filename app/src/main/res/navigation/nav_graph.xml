@@ -151,4 +151,19 @@
             app:argType="integer" />
     </fragment>
 
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.knotes.ui.auth.LoginFragment"
+        android:label="Login" />
+
+    <fragment
+        android:id="@+id/signupFragment"
+        android:name="com.example.knotes.ui.auth.SignupFragment"
+        android:label="Signup" />
+
+    <fragment
+        android:id="@+id/emailVerificationFragment"
+        android:name="com.example.knotes.ui.auth.EmailVerificationFragment"
+        android:label="Verify Email" />
+
 </navigation>

@@ -13,7 +13,9 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.color.DynamicColors
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -83,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         binding.navigationView.setupWithNavController(navController)
 
         observeAuthState()
+        observeThemeMode()
         handleIntent(intent)
 
         // Custom handling for theme only
@@ -90,6 +93,23 @@ class MainActivity : AppCompatActivity() {
             showThemeDialog()
             binding.drawerLayout.closeDrawers()
             true
+        }
+    }
+
+    private fun observeThemeMode() {
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                settingsManager.themeMode.collect { mode ->
+                    val nightMode = when (mode) {
+                        1 -> AppCompatDelegate.MODE_NIGHT_NO
+                        2 -> AppCompatDelegate.MODE_NIGHT_YES
+                        else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                    }
+                    if (AppCompatDelegate.getDefaultNightMode() != nightMode) {
+                        AppCompatDelegate.setDefaultNightMode(nightMode)
+                    }
+                }
+            }
         }
     }
 
@@ -171,12 +191,6 @@ class MainActivity : AppCompatActivity() {
                 .setSingleChoiceItems(themes, currentTheme) { dialog, which ->
                     lifecycleScope.launch {
                         settingsManager.setThemeMode(which)
-                        val mode = when (which) {
-                            1 -> AppCompatDelegate.MODE_NIGHT_NO
-                            2 -> AppCompatDelegate.MODE_NIGHT_YES
-                            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                        }
-                        AppCompatDelegate.setDefaultNightMode(mode)
                     }
                     dialog.dismiss()
                 }

@@ -64,4 +64,10 @@ abstract class RepositoryModule {
     abstract fun bindNoteVersionRepository(
         noteVersionRepositoryImpl: NoteVersionRepositoryImpl
     ): NoteVersionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAuthRepository(
+        authRepositoryImpl: com.example.knotes.data.repository.impl.AuthRepositoryImpl
+    ): com.example.knotes.domain.repository.AuthRepository
 }

@@ -102,7 +102,12 @@ class TasksFragment : Fragment() {
 
     private fun setupPullToRefresh() {
         binding.swipeRefreshTasks.apply {
-            setColorSchemeColors(ContextCompat.getColor(requireContext(), R.color.purple_6750A4))
+            val primaryColor = com.google.android.material.color.MaterialColors.getColor(
+                requireContext(),
+                androidx.appcompat.R.attr.colorPrimary,
+                ContextCompat.getColor(requireContext(), R.color.primary)
+            )
+            setColorSchemeColors(primaryColor)
             setOnRefreshListener {
                 viewLifecycleOwner.lifecycleScope.launch {
                     kotlinx.coroutines.delay(800)

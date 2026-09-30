@@ -6,9 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.knotes.R
@@ -33,6 +33,8 @@ class SettingsFragment : Fragment() {
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
+
+    private val authViewModel: com.example.knotes.ui.auth.AuthViewModel by viewModels()
 
     @Inject
     lateinit var settingsManager: SettingsManager
@@ -121,37 +123,28 @@ class SettingsFragment : Fragment() {
         updateAuthVisibility()
 
         binding.btnLogin.setOnClickListener {
-            val email = binding.etEmail.text.toString().trim()
-            val password = binding.etPassword.text.toString().trim()
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(requireContext(), "Please enter email and password", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            login(email, password)
+            findNavController().navigate(R.id.loginFragment)
         }
 
         binding.btnRegister.setOnClickListener {
-            val email = binding.etEmail.text.toString().trim()
-            val password = binding.etPassword.text.toString().trim()
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(requireContext(), "Please enter email and password", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            register(email, password)
+            findNavController().navigate(R.id.signupFragment)
         }
 
         binding.btnForgotPassword.setOnClickListener {
-            val email = binding.etEmail.text.toString().trim()
-            if (email.isEmpty()) {
-                Toast.makeText(requireContext(), "Please enter your email", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            forgotPassword(email)
+            findNavController().navigate(R.id.loginFragment)
         }
 
         binding.btnSignOut.setOnClickListener {
-            auth?.signOut()
-            updateAuthVisibility()
+            com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Log Out of KNotes?")
+                .setMessage("Are you sure you want to log out? Your notes and tasks will remain safely stored on your account.")
+                .setPositiveButton("Log Out") { _, _ ->
+                    authViewModel.logout {
+                        findNavController().navigate(R.id.loginFragment)
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
 
         binding.btnSyncNow.setOnClickListener {
@@ -178,12 +171,6 @@ class SettingsFragment : Fragment() {
                     }
                     viewLifecycleOwner.lifecycleScope.launch {
                         settingsManager.setThemeMode(mode)
-                        val appMode = when (mode) {
-                            1 -> AppCompatDelegate.MODE_NIGHT_NO
-                            2 -> AppCompatDelegate.MODE_NIGHT_YES
-                            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                        }
-                        AppCompatDelegate.setDefaultNightMode(appMode)
                     }
                 }
             }
@@ -252,40 +239,6 @@ class SettingsFragment : Fragment() {
                 }
                 .setNegativeButton("Cancel", null)
                 .show()
-        }
-    }
-
-    private fun login(email: String, p: String) {
-        auth?.signInWithEmailAndPassword(email, p)?.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                Toast.makeText(requireContext(), "Logged in successfully!", Toast.LENGTH_SHORT).show()
-                updateAuthVisibility()
-                syncRepository.startSync(manual = true)
-            } else {
-                Toast.makeText(requireContext(), "Login failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
-    private fun register(email: String, p: String) {
-        auth?.createUserWithEmailAndPassword(email, p)?.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                Toast.makeText(requireContext(), "Registered successfully!", Toast.LENGTH_SHORT).show()
-                updateAuthVisibility()
-                syncRepository.startSync(manual = true)
-            } else {
-                Toast.makeText(requireContext(), "Registration failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
-    private fun forgotPassword(email: String) {
-        auth?.sendPasswordResetEmail(email)?.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                Toast.makeText(requireContext(), "Password reset email sent!", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireContext(), "Error: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-            }
         }
     }
 

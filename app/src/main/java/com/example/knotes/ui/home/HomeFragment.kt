@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -105,12 +104,6 @@ class HomeFragment : Fragment() {
                     onSetThemeMode = { mode ->
                         lifecycleScope.launch {
                             settingsManager.setThemeMode(mode)
-                            val nightMode = when (mode) {
-                                1 -> AppCompatDelegate.MODE_NIGHT_NO
-                                2 -> AppCompatDelegate.MODE_NIGHT_YES
-                                else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                            }
-                            AppCompatDelegate.setDefaultNightMode(nightMode)
                         }
                     },
                     onToggleAiEnabled = { enabled ->
