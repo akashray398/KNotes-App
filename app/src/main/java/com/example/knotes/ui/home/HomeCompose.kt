@@ -1,6 +1,5 @@
 package com.example.knotes.ui.home
 
-import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
@@ -26,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.knotes.R
 import com.example.knotes.domain.model.Task
+import com.example.knotes.ui.components.FocusVelocityDigestCompose
+import com.example.knotes.ui.components.EnergyLevel
 import com.example.knotes.ui.components.HomeTopBarCompose
 import com.example.knotes.ui.components.NextUpTaskCompose
 import com.example.knotes.ui.components.QuickFeatureHubBottomSheet
@@ -56,6 +57,7 @@ fun HomeScreenCompose(
     onImportData: () -> Unit
 ) {
     var isFeatureHubOpen by remember { mutableStateOf(false) }
+    var selectedEnergyLevel by remember { mutableStateOf<EnergyLevel?>(null) }
 
     val animatedProgress by animateIntAsState(
         targetValue = state.todayProgressPercent,
@@ -161,6 +163,15 @@ fun HomeScreenCompose(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // FUTURE TREND 2026 — AI FOCUS DIGEST & PRODUCTIVITY VELOCITY TRACKER
+            FocusVelocityDigestCompose(
+                state = state,
+                selectedEnergyLevel = selectedEnergyLevel,
+                onEnergyLevelSelected = { selectedEnergyLevel = it }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // PART 6 — NEXT UP TASK
             NextUpTaskCompose(
                 tasks = state.allTasks,
@@ -193,7 +204,16 @@ fun HomeScreenCompose(
                 }
             }
 
-            if (state.todayTasks.isNotEmpty()) {
+            val displayTasks = remember(state.todayTasks, selectedEnergyLevel) {
+                when (selectedEnergyLevel) {
+                    EnergyLevel.HIGH -> state.todayTasks.filter { it.priority == com.example.knotes.domain.model.Priority.HIGH || it.priority == com.example.knotes.domain.model.Priority.MEDIUM }
+                    EnergyLevel.DEEP -> state.todayTasks.filter { (it.relatedNoteId != null && it.relatedNoteId != -1) || it.tags.isNotEmpty() }
+                    EnergyLevel.QUICK -> state.todayTasks.filter { it.priority == com.example.knotes.domain.model.Priority.LOW }
+                    null -> state.todayTasks
+                }
+            }
+
+            if (displayTasks.isNotEmpty()) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
@@ -201,7 +221,7 @@ fun HomeScreenCompose(
                     border = CardDefaults.outlinedCardBorder(enabled = true)
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                        state.todayTasks.forEach { task ->
+                        displayTasks.forEach { task ->
                             TodayTaskItemRow(
                                 task = task,
                                 onToggleCompletion = { onToggleTaskCompletion(task) },
