@@ -45,16 +45,30 @@ class HomeViewModel @Inject constructor(
         val startOfDay = getStartOfDay(now)
         val endOfDay = getEndOfDay(now)
 
-        // Today's tasks (tasks scheduled or due today)
-        val todayTasks = tasks.filter { task ->
+        // Today's relevant tasks (scheduled for today or completed/updated today)
+        val todayRelevantTasks = tasks.filter { task ->
             val targetTime = task.deadline ?: task.reminderTime
-            targetTime != null && targetTime in startOfDay..endOfDay
-        }.sortedBy { it.deadline ?: it.reminderTime ?: Long.MAX_VALUE }
+            val isScheduledToday = targetTime != null && targetTime in startOfDay..endOfDay
+            val isCompletedToday = task.isCompleted && task.updatedTime in startOfDay..endOfDay
+            val isRecurringUpdatedToday = task.recurrence != com.example.knotes.domain.model.Recurrence.NONE && task.updatedTime in startOfDay..endOfDay
 
-        val todayTotal = todayTasks.size
-        val todayCompleted = todayTasks.count { it.isCompleted }
-        val todayRemaining = todayTotal - todayCompleted
-        val todayPercent = if (todayTotal > 0) ((todayCompleted.toFloat() / todayTotal.toFloat()) * 100).toInt() else 0
+            isScheduledToday || isCompletedToday || isRecurringUpdatedToday
+        }
+
+        val todayCompleted = todayRelevantTasks.count { task ->
+            task.isCompleted || (task.recurrence != com.example.knotes.domain.model.Recurrence.NONE && task.updatedTime in startOfDay..endOfDay)
+        }
+
+        val todayTotal = todayRelevantTasks.size
+        val todayRemaining = maxOf(0, todayTotal - todayCompleted)
+        val todayPercent = if (todayTotal > 0) minOf(100, ((todayCompleted.toFloat() / todayTotal.toFloat()) * 100).toInt()) else 0
+
+        val todayTasks = tasks.filter { task ->
+            !task.isCompleted && (
+                (task.deadline != null && task.deadline <= endOfDay) ||
+                (task.reminderTime != null && task.reminderTime <= endOfDay)
+            )
+        }.sortedBy { it.deadline ?: it.reminderTime ?: Long.MAX_VALUE }
 
         HomeState(
             totalNotes = notes.size,
@@ -88,7 +102,8 @@ class HomeViewModel @Inject constructor(
                 val updatedTask = task.copy(
                     reminderTime = nextReminder,
                     deadline = nextDeadline ?: task.deadline,
-                    isCompleted = false
+                    isCompleted = false,
+                    updatedTime = System.currentTimeMillis()
                 )
                 taskRepository.updateTask(updatedTask)
                 taskReminderManager.cancelTaskReminders(task)
@@ -97,7 +112,8 @@ class HomeViewModel @Inject constructor(
             } else {
                 val updatedTask = task.copy(
                     isCompleted = true,
-                    recurrence = com.example.knotes.domain.model.Recurrence.NONE
+                    recurrence = com.example.knotes.domain.model.Recurrence.NONE,
+                    updatedTime = System.currentTimeMillis()
                 )
                 taskRepository.updateTask(updatedTask)
                 taskReminderManager.cancelTaskReminders(task)

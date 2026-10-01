@@ -183,7 +183,8 @@ class TasksViewModel @Inject constructor(
                         val updatedTask = task.copy(
                             reminderTime = nextReminder,
                             deadline = nextDeadline ?: task.deadline,
-                            isCompleted = false
+                            isCompleted = false,
+                            updatedTime = System.currentTimeMillis()
                         )
                         repository.updateTask(updatedTask)
 
@@ -196,7 +197,8 @@ class TasksViewModel @Inject constructor(
                         // Recurrence end date reached! Complete task permanently
                         val updatedTask = task.copy(
                             isCompleted = true,
-                            recurrence = com.example.knotes.domain.model.Recurrence.NONE
+                            recurrence = com.example.knotes.domain.model.Recurrence.NONE,
+                            updatedTime = System.currentTimeMillis()
                         )
                         repository.updateTask(updatedTask)
                         taskReminderManager.cancelTaskReminders(task)

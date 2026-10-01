@@ -24,7 +24,10 @@ object DatabaseModule {
             context,
             KNotesDatabase::class.java,
             "knotes_db"
-        ).fallbackToDestructiveMigration().build()
+        )
+            .addMigrations(KNotesDatabase.MIGRATION_10_11)
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides

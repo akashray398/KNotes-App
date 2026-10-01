@@ -5,6 +5,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.knotes.data.dao.FolderDao
 import com.example.knotes.data.dao.NoteDao
 import com.example.knotes.data.dao.TaskDao
@@ -24,7 +26,7 @@ import com.example.knotes.data.entity.*
         SearchHistory::class,
         NoteVersion::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -36,6 +38,12 @@ abstract class KNotesDatabase : RoomDatabase() {
     abstract fun noteVersionDao(): NoteVersionDao
 
     companion object {
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE tasks ADD COLUMN recurrenceEndDate INTEGER DEFAULT NULL")
+            }
+        }
+
         @Volatile
         private var INSTANCE: KNotesDatabase? = null
 
@@ -45,7 +53,10 @@ abstract class KNotesDatabase : RoomDatabase() {
                     context.applicationContext,
                     KNotesDatabase::class.java,
                     "knotes_db"
-                ).fallbackToDestructiveMigration().build()
+                )
+                    .addMigrations(MIGRATION_10_11)
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }
