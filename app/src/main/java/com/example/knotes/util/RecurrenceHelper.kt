@@ -5,7 +5,11 @@ import java.util.Calendar
 
 object RecurrenceHelper {
 
-    fun getNextOccurrence(currentScheduledTime: Long?, recurrence: Recurrence): Long? {
+    fun getNextOccurrence(
+        currentScheduledTime: Long?,
+        recurrence: Recurrence,
+        recurrenceEndDate: Long? = null
+    ): Long? {
         if (currentScheduledTime == null || currentScheduledTime == 0L || recurrence == Recurrence.NONE) return null
 
         val targetCal = Calendar.getInstance()
@@ -19,7 +23,7 @@ object RecurrenceHelper {
 
         val nowCal = Calendar.getInstance()
 
-        // Advance date while preserving exact time of day until targetCal is strictly in the future
+        // Advance date while preserving exact time of day until targetCal is after current time
         do {
             when (recurrence) {
                 Recurrence.DAILY -> targetCal.add(Calendar.DAY_OF_YEAR, 1)
@@ -40,6 +44,26 @@ object RecurrenceHelper {
             targetCal.set(Calendar.MILLISECOND, targetMillis)
         } while (targetCal.before(nowCal))
 
-        return targetCal.timeInMillis
+        val nextTime = targetCal.timeInMillis
+
+        // If a repeat end date is specified, check if next occurrence exceeds the end date
+        if (recurrenceEndDate != null && recurrenceEndDate > 0L) {
+            val endOfDayMillis = getEndOfDay(recurrenceEndDate)
+            if (nextTime > endOfDayMillis) {
+                return null
+            }
+        }
+
+        return nextTime
+    }
+
+    private fun getEndOfDay(timestamp: Long): Long {
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = timestamp
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        return calendar.timeInMillis
     }
 }

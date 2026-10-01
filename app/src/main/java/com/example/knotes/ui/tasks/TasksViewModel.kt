@@ -168,20 +168,41 @@ class TasksViewModel @Inject constructor(
                 if (newCompletedState && task.recurrence != com.example.knotes.domain.model.Recurrence.NONE) {
                     // Recurring task completed -> advance to next occurrence
                     val entityRecurrence = com.example.knotes.data.entity.Recurrence.valueOf(task.recurrence.name)
-                    val nextReminder = com.example.knotes.util.RecurrenceHelper.getNextOccurrence(task.reminderTime ?: task.deadline, entityRecurrence)
-                    val nextDeadline = com.example.knotes.util.RecurrenceHelper.getNextOccurrence(task.deadline, entityRecurrence)
-                    val updatedTask = task.copy(
-                        reminderTime = nextReminder,
-                        deadline = nextDeadline ?: task.deadline,
-                        isCompleted = false
+                    val nextReminder = com.example.knotes.util.RecurrenceHelper.getNextOccurrence(
+                        task.reminderTime ?: task.deadline,
+                        entityRecurrence,
+                        task.recurrenceEndDate
                     )
-                    repository.updateTask(updatedTask)
+                    val nextDeadline = com.example.knotes.util.RecurrenceHelper.getNextOccurrence(
+                        task.deadline,
+                        entityRecurrence,
+                        task.recurrenceEndDate
+                    )
 
-                    taskReminderManager.cancelTaskReminders(task)
-                    taskReminderManager.scheduleTaskReminders(updatedTask)
+                    if (nextDeadline != null || nextReminder != null) {
+                        val updatedTask = task.copy(
+                            reminderTime = nextReminder,
+                            deadline = nextDeadline ?: task.deadline,
+                            isCompleted = false
+                        )
+                        repository.updateTask(updatedTask)
 
-                    streakManager.checkAndUpdateStreak()
-                    Log.d(TAG, "TASK_RECURRING_ADVANCED taskId=${task.id} nextDeadline=$nextDeadline")
+                        taskReminderManager.cancelTaskReminders(task)
+                        taskReminderManager.scheduleTaskReminders(updatedTask)
+
+                        streakManager.checkAndUpdateStreak()
+                        Log.d(TAG, "TASK_RECURRING_ADVANCED taskId=${task.id} nextDeadline=$nextDeadline")
+                    } else {
+                        // Recurrence end date reached! Complete task permanently
+                        val updatedTask = task.copy(
+                            isCompleted = true,
+                            recurrence = com.example.knotes.domain.model.Recurrence.NONE
+                        )
+                        repository.updateTask(updatedTask)
+                        taskReminderManager.cancelTaskReminders(task)
+                        streakManager.checkAndUpdateStreak()
+                        Log.d(TAG, "TASK_RECURRING_COMPLETED_END_DATE taskId=${task.id}")
+                    }
                 } else {
                     toggleTaskCompletionUseCase(task.id, newCompletedState)
                     if (newCompletedState) {

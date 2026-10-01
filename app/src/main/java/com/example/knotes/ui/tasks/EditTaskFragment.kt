@@ -38,6 +38,7 @@ class EditTaskFragment : Fragment() {
     private var selectedDeadline: Long = System.currentTimeMillis()
     private var selectedReminder: Long? = null
     private var selectedNoteId: Int? = null
+    private var selectedRepeatEndDate: Long? = null
 
     @javax.inject.Inject
     lateinit var taskReminderManager: com.example.knotes.util.TaskReminderManager
@@ -108,6 +109,22 @@ class EditTaskFragment : Fragment() {
             }
         }
 
+        binding.chipGroupRecurrence.setOnCheckedStateChangeListener { _, checkedIds ->
+            val isRepeating = checkedIds.contains(R.id.chip_repeat_daily) ||
+                              checkedIds.contains(R.id.chip_repeat_weekdays) ||
+                              checkedIds.contains(R.id.chip_repeat_weekly)
+            binding.layoutRepeatRange.visibility = if (isRepeating) View.VISIBLE else View.GONE
+        }
+
+        binding.buttonPickRepeatEndDate.setOnClickListener {
+            showRepeatEndDatePicker()
+        }
+
+        binding.buttonClearRepeatEndDate.setOnClickListener {
+            selectedRepeatEndDate = null
+            updateRepeatEndDateText()
+        }
+
         binding.buttonLinkNote.setOnClickListener {
             showNoteSelector()
         }
@@ -135,12 +152,15 @@ class EditTaskFragment : Fragment() {
                     selectedDeadline = it.deadline ?: System.currentTimeMillis()
                     selectedReminder = it.reminderTime
                     selectedNoteId = it.relatedNoteId
+                    selectedRepeatEndDate = it.recurrenceEndDate
 
                     updateDeadlineText()
                     updateReminderText()
+                    updateRepeatEndDateText()
 
                     binding.switchReminders.isChecked = selectedReminder != null
                     binding.layoutReminderTime.visibility = if (selectedReminder != null) View.VISIBLE else View.GONE
+                    binding.layoutRepeatRange.visibility = if (it.recurrence != Recurrence.NONE) View.VISIBLE else View.GONE
 
                     if (selectedNoteId != null && selectedNoteId != -1) {
                         updateNoteLinkText()
@@ -296,6 +316,31 @@ class EditTaskFragment : Fragment() {
         binding.textViewDeadline.text = sdf.format(Date(selectedDeadline))
     }
 
+    private fun showRepeatEndDatePicker() {
+        val datePicker = MaterialDatePicker.Builder.datePicker()
+            .setTitleText("Select Repeat End Date")
+            .setSelection(selectedRepeatEndDate ?: selectedDeadline)
+            .build()
+
+        datePicker.addOnPositiveButtonClickListener { pickerSelection ->
+            selectedRepeatEndDate = pickerSelection
+            updateRepeatEndDateText()
+        }
+
+        datePicker.show(parentFragmentManager, "REPEAT_END_DATE_PICKER")
+    }
+
+    private fun updateRepeatEndDateText() {
+        selectedRepeatEndDate?.let {
+            val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+            binding.textViewRepeatEndDate.text = "Until ${sdf.format(Date(it))}"
+            binding.buttonClearRepeatEndDate.visibility = View.VISIBLE
+        } ?: run {
+            binding.textViewRepeatEndDate.text = "No End Date (Indefinite)"
+            binding.buttonClearRepeatEndDate.visibility = View.GONE
+        }
+    }
+
     private fun saveTask() {
         val title = binding.editTextTitle.text.toString().trim()
         val tagsString = binding.editTextTags.text.toString().trim()
@@ -320,11 +365,14 @@ class EditTaskFragment : Fragment() {
             else -> Recurrence.NONE
         }
 
+        val repeatEndDate = if (recurrence != Recurrence.NONE) selectedRepeatEndDate else null
+
         val taskToSave = currentTask?.copy(
             title = title,
             deadline = selectedDeadline,
             priority = priority,
             recurrence = recurrence,
+            recurrenceEndDate = repeatEndDate,
             tags = tags,
             reminderTime = selectedReminder,
             relatedNoteId = selectedNoteId,
@@ -334,6 +382,7 @@ class EditTaskFragment : Fragment() {
             deadline = selectedDeadline,
             priority = priority,
             recurrence = recurrence,
+            recurrenceEndDate = repeatEndDate,
             tags = tags,
             reminderTime = selectedReminder,
             relatedNoteId = selectedNoteId,

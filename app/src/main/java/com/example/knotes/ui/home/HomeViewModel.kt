@@ -71,12 +71,46 @@ class HomeViewModel @Inject constructor(
 
     fun toggleTaskCompletion(task: Task) = viewModelScope.launch {
         val newCompletedState = !task.isCompleted
-        toggleTaskCompletionUseCase(task.id, newCompletedState)
-        if (newCompletedState) {
-            taskReminderManager.cancelTaskReminders(task)
-            streakManager.checkAndUpdateStreak()
+        if (newCompletedState && task.recurrence != com.example.knotes.domain.model.Recurrence.NONE) {
+            val entityRecurrence = com.example.knotes.data.entity.Recurrence.valueOf(task.recurrence.name)
+            val nextReminder = com.example.knotes.util.RecurrenceHelper.getNextOccurrence(
+                task.reminderTime ?: task.deadline,
+                entityRecurrence,
+                task.recurrenceEndDate
+            )
+            val nextDeadline = com.example.knotes.util.RecurrenceHelper.getNextOccurrence(
+                task.deadline,
+                entityRecurrence,
+                task.recurrenceEndDate
+            )
+
+            if (nextDeadline != null || nextReminder != null) {
+                val updatedTask = task.copy(
+                    reminderTime = nextReminder,
+                    deadline = nextDeadline ?: task.deadline,
+                    isCompleted = false
+                )
+                taskRepository.updateTask(updatedTask)
+                taskReminderManager.cancelTaskReminders(task)
+                taskReminderManager.scheduleTaskReminders(updatedTask)
+                streakManager.checkAndUpdateStreak()
+            } else {
+                val updatedTask = task.copy(
+                    isCompleted = true,
+                    recurrence = com.example.knotes.domain.model.Recurrence.NONE
+                )
+                taskRepository.updateTask(updatedTask)
+                taskReminderManager.cancelTaskReminders(task)
+                streakManager.checkAndUpdateStreak()
+            }
         } else {
-            taskReminderManager.scheduleTaskReminders(task.copy(isCompleted = false))
+            toggleTaskCompletionUseCase(task.id, newCompletedState)
+            if (newCompletedState) {
+                taskReminderManager.cancelTaskReminders(task)
+                streakManager.checkAndUpdateStreak()
+            } else {
+                taskReminderManager.scheduleTaskReminders(task.copy(isCompleted = false))
+            }
         }
     }
 

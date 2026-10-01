@@ -10,6 +10,7 @@ data class Task(
     val reminderTime: Long? = null,
     val secondaryReminderTime: Long? = null,
     val recurrence: Recurrence = Recurrence.NONE,
+    val recurrenceEndDate: Long? = null,
     val createdTime: Long = System.currentTimeMillis(),
     val updatedTime: Long = System.currentTimeMillis(),
     val relatedNoteId: Int? = null,

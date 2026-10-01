@@ -16,6 +16,7 @@ data class Task(
     val isCompleted: Boolean = false,
     val priority: Priority = Priority.MEDIUM,
     val recurrence: Recurrence = Recurrence.NONE,
+    val recurrenceEndDate: Long? = null,
     val tags: List<String> = emptyList(),
     val color: Int = 0,
     @ColumnInfo(name = "lastModified")
