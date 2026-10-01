@@ -45,20 +45,17 @@ class HomeViewModel @Inject constructor(
         val startOfDay = getStartOfDay(now)
         val endOfDay = getEndOfDay(now)
 
-        // Today's relevant tasks (scheduled for today or completed/updated today)
+        // Today's relevant tasks (scheduled for today, created today for today, or completed today)
         val todayRelevantTasks = tasks.filter { task ->
             val targetTime = task.deadline ?: task.reminderTime
             val isScheduledToday = targetTime != null && targetTime in startOfDay..endOfDay
+            val isCreatedTodayNoFuture = task.createdTime in startOfDay..endOfDay && (targetTime == null || targetTime <= endOfDay)
             val isCompletedToday = task.isCompleted && task.updatedTime in startOfDay..endOfDay
-            val isRecurringUpdatedToday = task.recurrence != com.example.knotes.domain.model.Recurrence.NONE && task.updatedTime in startOfDay..endOfDay
 
-            isScheduledToday || isCompletedToday || isRecurringUpdatedToday
+            isScheduledToday || isCreatedTodayNoFuture || isCompletedToday
         }
 
-        val todayCompleted = todayRelevantTasks.count { task ->
-            task.isCompleted || (task.recurrence != com.example.knotes.domain.model.Recurrence.NONE && task.updatedTime in startOfDay..endOfDay)
-        }
-
+        val todayCompleted = todayRelevantTasks.count { it.isCompleted }
         val todayTotal = todayRelevantTasks.size
         val todayRemaining = maxOf(0, todayTotal - todayCompleted)
         val todayPercent = if (todayTotal > 0) minOf(100, ((todayCompleted.toFloat() / todayTotal.toFloat()) * 100).toInt()) else 0
@@ -66,7 +63,8 @@ class HomeViewModel @Inject constructor(
         val todayTasks = tasks.filter { task ->
             !task.isCompleted && (
                 (task.deadline != null && task.deadline <= endOfDay) ||
-                (task.reminderTime != null && task.reminderTime <= endOfDay)
+                (task.reminderTime != null && task.reminderTime <= endOfDay) ||
+                (task.deadline == null && task.reminderTime == null && task.createdTime in startOfDay..endOfDay)
             )
         }.sortedBy { it.deadline ?: it.reminderTime ?: Long.MAX_VALUE }
 

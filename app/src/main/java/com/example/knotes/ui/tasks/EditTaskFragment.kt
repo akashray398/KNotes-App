@@ -71,11 +71,18 @@ class EditTaskFragment : Fragment() {
 
     private fun getDefaultFutureDeadline(): Long {
         val calendar = Calendar.getInstance()
-        calendar.add(Calendar.DAY_OF_YEAR, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 18) // Default 6 PM
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
+        val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+        if (currentHour >= 18) {
+            calendar.add(Calendar.HOUR_OF_DAY, 2)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+        } else {
+            calendar.set(Calendar.HOUR_OF_DAY, 18) // Today 6 PM
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+        }
         return calendar.timeInMillis
     }
 
