@@ -45,17 +45,22 @@ class HomeViewModel @Inject constructor(
         val startOfDay = getStartOfDay(now)
         val endOfDay = getEndOfDay(now)
 
-        // Today's relevant tasks (scheduled for today, created today for today, or completed today)
+        // Today's relevant tasks (scheduled, created today, or completed today)
         val todayRelevantTasks = tasks.filter { task ->
             val targetTime = task.deadline ?: task.reminderTime
             val isScheduledToday = targetTime != null && targetTime in startOfDay..endOfDay
             val isCreatedTodayNoFuture = task.createdTime in startOfDay..endOfDay && (targetTime == null || targetTime <= endOfDay)
-            val isCompletedToday = task.isCompleted && task.updatedTime in startOfDay..endOfDay
+            val isCompletedToday = task.lastCompletedTime != null && task.lastCompletedTime in startOfDay..endOfDay
+            val isCurrentlyCompleted = task.isCompleted && (task.updatedTime in startOfDay..endOfDay || isScheduledToday || isCreatedTodayNoFuture)
 
-            isScheduledToday || isCreatedTodayNoFuture || isCompletedToday
+            isScheduledToday || isCreatedTodayNoFuture || isCompletedToday || isCurrentlyCompleted
         }
 
-        val todayCompleted = todayRelevantTasks.count { it.isCompleted }
+        val todayCompleted = todayRelevantTasks.count { task ->
+            (task.lastCompletedTime != null && task.lastCompletedTime in startOfDay..endOfDay) ||
+            (task.isCompleted && (task.updatedTime in startOfDay..endOfDay || (task.deadline != null && task.deadline in startOfDay..endOfDay)))
+        }
+
         val todayTotal = todayRelevantTasks.size
         val todayRemaining = maxOf(0, todayTotal - todayCompleted)
         val todayPercent = if (todayTotal > 0) minOf(100, ((todayCompleted.toFloat() / todayTotal.toFloat()) * 100).toInt()) else 0
@@ -83,6 +88,8 @@ class HomeViewModel @Inject constructor(
 
     fun toggleTaskCompletion(task: Task) = viewModelScope.launch {
         val newCompletedState = !task.isCompleted
+        val now = System.currentTimeMillis()
+
         if (newCompletedState && task.recurrence != com.example.knotes.domain.model.Recurrence.NONE) {
             val entityRecurrence = com.example.knotes.data.entity.Recurrence.valueOf(task.recurrence.name)
             val nextReminder = com.example.knotes.util.RecurrenceHelper.getNextOccurrence(
@@ -101,7 +108,8 @@ class HomeViewModel @Inject constructor(
                     reminderTime = nextReminder,
                     deadline = nextDeadline ?: task.deadline,
                     isCompleted = false,
-                    updatedTime = System.currentTimeMillis()
+                    lastCompletedTime = now,
+                    updatedTime = now
                 )
                 taskRepository.updateTask(updatedTask)
                 taskReminderManager.cancelTaskReminders(task)
@@ -111,19 +119,25 @@ class HomeViewModel @Inject constructor(
                 val updatedTask = task.copy(
                     isCompleted = true,
                     recurrence = com.example.knotes.domain.model.Recurrence.NONE,
-                    updatedTime = System.currentTimeMillis()
+                    lastCompletedTime = now,
+                    updatedTime = now
                 )
                 taskRepository.updateTask(updatedTask)
                 taskReminderManager.cancelTaskReminders(task)
                 streakManager.checkAndUpdateStreak()
             }
         } else {
-            toggleTaskCompletionUseCase(task.id, newCompletedState)
+            val updatedTask = task.copy(
+                isCompleted = newCompletedState,
+                lastCompletedTime = if (newCompletedState) now else null,
+                updatedTime = now
+            )
+            taskRepository.updateTask(updatedTask)
             if (newCompletedState) {
                 taskReminderManager.cancelTaskReminders(task)
                 streakManager.checkAndUpdateStreak()
             } else {
-                taskReminderManager.scheduleTaskReminders(task.copy(isCompleted = false))
+                taskReminderManager.scheduleTaskReminders(updatedTask)
             }
         }
     }

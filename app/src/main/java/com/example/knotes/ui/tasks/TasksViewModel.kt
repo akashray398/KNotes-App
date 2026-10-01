@@ -163,6 +163,7 @@ class TasksViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val newCompletedState = !task.isCompleted
+                val now = System.currentTimeMillis()
                 Log.d(TAG, "TASK_COMPLETION_REQUEST taskId=${task.id} targetState=$newCompletedState")
 
                 if (newCompletedState && task.recurrence != com.example.knotes.domain.model.Recurrence.NONE) {
@@ -184,7 +185,8 @@ class TasksViewModel @Inject constructor(
                             reminderTime = nextReminder,
                             deadline = nextDeadline ?: task.deadline,
                             isCompleted = false,
-                            updatedTime = System.currentTimeMillis()
+                            lastCompletedTime = now,
+                            updatedTime = now
                         )
                         repository.updateTask(updatedTask)
 
@@ -198,7 +200,8 @@ class TasksViewModel @Inject constructor(
                         val updatedTask = task.copy(
                             isCompleted = true,
                             recurrence = com.example.knotes.domain.model.Recurrence.NONE,
-                            updatedTime = System.currentTimeMillis()
+                            lastCompletedTime = now,
+                            updatedTime = now
                         )
                         repository.updateTask(updatedTask)
                         taskReminderManager.cancelTaskReminders(task)
@@ -206,13 +209,18 @@ class TasksViewModel @Inject constructor(
                         Log.d(TAG, "TASK_RECURRING_COMPLETED_END_DATE taskId=${task.id}")
                     }
                 } else {
-                    toggleTaskCompletionUseCase(task.id, newCompletedState)
+                    val updatedTask = task.copy(
+                        isCompleted = newCompletedState,
+                        lastCompletedTime = if (newCompletedState) now else null,
+                        updatedTime = now
+                    )
+                    repository.updateTask(updatedTask)
                     if (newCompletedState) {
                         taskReminderManager.cancelTaskReminders(task)
                         streakManager.checkAndUpdateStreak()
                         Log.d(TAG, "TASK_COMPLETED taskId=${task.id} completed=true")
                     } else {
-                        taskReminderManager.scheduleTaskReminders(task.copy(isCompleted = false))
+                        taskReminderManager.scheduleTaskReminders(updatedTask)
                         Log.d(TAG, "TASK_UNCOMPLETED taskId=${task.id} completed=false")
                     }
                 }

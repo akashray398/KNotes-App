@@ -26,7 +26,7 @@ import com.example.knotes.data.entity.*
         SearchHistory::class,
         NoteVersion::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -44,6 +44,12 @@ abstract class KNotesDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE tasks ADD COLUMN lastCompletedTime INTEGER DEFAULT NULL")
+            }
+        }
+
         @Volatile
         private var INSTANCE: KNotesDatabase? = null
 
@@ -54,7 +60,7 @@ abstract class KNotesDatabase : RoomDatabase() {
                     KNotesDatabase::class.java,
                     "knotes_db"
                 )
-                    .addMigrations(MIGRATION_10_11)
+                    .addMigrations(MIGRATION_10_11, MIGRATION_11_12)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
