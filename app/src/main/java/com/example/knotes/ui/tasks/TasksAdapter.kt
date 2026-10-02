@@ -69,6 +69,20 @@ class TasksAdapter(
                     layoutLinkedNote.visibility = View.GONE
                 }
 
+                // Checklist / Subtask Progress Indicator
+                val descLines = task.description.split("\n")
+                val totalChecklist = descLines.count { it.contains("[ ]") || it.contains("[x]") }
+                val doneChecklist = descLines.count { it.contains("[x]") }
+
+                if (totalChecklist > 0) {
+                    layoutSubtasksProgress.visibility = View.VISIBLE
+                    val percent = ((doneChecklist.toFloat() / totalChecklist.toFloat()) * 100).toInt()
+                    progressSubtasks.progress = percent
+                    tvSubtasksCount.text = "✓ $doneChecklist/$totalChecklist subtasks"
+                } else {
+                    layoutSubtasksProgress.visibility = View.GONE
+                }
+
                 chipCategory.visibility = if (task.tags.isNotEmpty()) {
                     chipCategory.text = task.tags[0]
                     View.VISIBLE

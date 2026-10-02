@@ -108,6 +108,39 @@
 
         </LinearLayout>
 
+        <!-- Subtask / Checklist Mini-Progress Bar -->
+        <LinearLayout
+            android:id="@+id/layout_subtasks_progress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/text_view_title"
+            app:layout_constraintTop_toBottomOf="@id/layout_meta"
+            tools:visibility="visible">
+
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/progress_subtasks"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                app:trackThickness="3dp"
+                app:indicatorColor="?attr/colorPrimary"
+                app:trackCornerRadius="2dp"
+                tools:progress="60" />
+
+            <TextView
+                android:id="@+id/tv_subtasks_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:textColor="?attr/colorPrimary"
+                tools:text="✓ 3/5 subtasks" />
+        </LinearLayout>
+
         <com.google.android.material.chip.Chip
             android:id="@+id/chip_category"
             style="@style/Widget.Material3.Chip.Assist"
@@ -118,7 +151,7 @@
             android:visibility="gone"
             app:chipMinTouchTargetSize="0dp"
             app:layout_constraintStart_toStartOf="@id/text_view_title"
-            app:layout_constraintTop_toBottomOf="@id/layout_meta"
+            app:layout_constraintTop_toBottomOf="@id/layout_subtasks_progress"
             tools:text="Shopping"
             tools:visibility="visible" />
 

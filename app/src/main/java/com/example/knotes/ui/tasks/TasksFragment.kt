@@ -8,6 +8,8 @@ import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
@@ -23,9 +25,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.knotes.R
 import com.example.knotes.databinding.FragmentTasksBinding
-import com.example.knotes.ui.components.NextUpTaskCompose
 import com.google.android.material.chip.Chip
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -40,6 +42,9 @@ class TasksFragment : Fragment() {
     private lateinit var searchAdapter: TasksAdapter
 
     private var isCompletedExpanded = false
+
+    @javax.inject.Inject
+    lateinit var getNotesUseCase: com.example.knotes.domain.usecase.GetNotesUseCase
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,7 +62,8 @@ class TasksFragment : Fragment() {
         setupRecyclerViews()
         setupFab()
         setupSearch()
-        setupNextUpCard()
+        setupTasksHeader()
+        setupLinkedNoteSheet()
         setupFilters()
         setupToolbarActions()
         setupSwipeActions()
@@ -85,13 +91,18 @@ class TasksFragment : Fragment() {
         }
     }
 
-    private fun setupNextUpCard() {
-        binding.composeNextUp.apply {
+    private fun setupTasksHeader() {
+        binding.composeTasksHeader.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                val tasks by viewModel.allTasks.collectAsState(initial = emptyList())
-                NextUpTaskCompose(
-                    tasks = tasks,
+                val allTasks by viewModel.allTasks.collectAsState(initial = emptyList())
+                val stats by viewModel.productivityStats.collectAsState(initial = Triple(0, 0, 0))
+
+                com.example.knotes.ui.components.TasksHeaderCompose(
+                    completedCount = stats.first,
+                    pendingCount = stats.second,
+                    progressPercent = stats.third,
+                    tasks = allTasks,
                     onTaskClick = { taskId ->
                         navigateToEdit(taskId)
                     }
@@ -165,14 +176,49 @@ class TasksFragment : Fragment() {
         })
     }
 
+    private var selectedLinkedNote by mutableStateOf<com.example.knotes.domain.model.Note?>(null)
+    private var isLinkedNoteSheetOpen by mutableStateOf(false)
+    private var isLinkedNoteLoading by mutableStateOf(false)
+
+    private fun setupLinkedNoteSheet() {
+        binding.composeLinkedNoteSheet.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                if (isLinkedNoteSheetOpen) {
+                    com.example.knotes.ui.components.LinkedNoteBottomSheetCompose(
+                        note = selectedLinkedNote,
+                        isLoading = isLinkedNoteLoading,
+                        onOpenFullNoteClick = { noteId ->
+                            val action = TasksFragmentDirections.actionTasksFragmentToEditNoteFragment(noteId)
+                            findNavController().navigate(action)
+                        },
+                        onDismiss = { isLinkedNoteSheetOpen = false }
+                    )
+                }
+            }
+        }
+    }
+
     private fun navigateToEdit(taskId: Int) {
         val action = TasksFragmentDirections.actionTasksFragmentToEditTaskFragment(taskId)
         findNavController().navigate(action)
     }
 
     private fun navigateToNote(noteId: Int) {
-        val action = TasksFragmentDirections.actionTasksFragmentToEditNoteFragment(noteId)
-        findNavController().navigate(action)
+        isLinkedNoteSheetOpen = true
+        isLinkedNoteLoading = true
+        selectedLinkedNote = null
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val notes = getNotesUseCase().first()
+                val note = notes.find { it.id == noteId }
+                selectedLinkedNote = note
+            } catch (e: Exception) {
+                selectedLinkedNote = null
+            } finally {
+                isLinkedNoteLoading = false
+            }
+        }
     }
 
     private fun setupFab() {
@@ -286,17 +332,7 @@ class TasksFragment : Fragment() {
                     viewModel.productivityStats.collect { stats ->
                         val completed = stats.first
                         val pending = stats.second
-                        val percent = stats.third
-                        
                         binding.tvSummary.text = getString(R.string.tasks_summary, pending, completed)
-                        binding.progressIndicator.setProgress(percent, true)
-                        binding.tvProgressPercent.text = getString(R.string.percent_format, percent)
-                        binding.tvMotivation.text = when {
-                            percent >= 100 -> "Incredible! Everything is done. 🎉"
-                            percent >= 70 -> "Keep Going! You are almost there."
-                            percent >= 40 -> "Great progress, keep at it!"
-                            else -> "Start small. You can do this! 🚀"
-                        }
                     }
                 }
             }
