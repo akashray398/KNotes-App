@@ -109,13 +109,32 @@ class TasksViewModel @Inject constructor(
 
     data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
-    // Authoritative Progress Calculation from Room DAO Flow
-    val productivityStats = combine(
-        repository.getCompletedTasksCount(),
-        repository.getPendingTasksCount()
-    ) { completed, pending ->
-        val total = completed + pending
-        val percent = if (total > 0) (completed.toFloat() / total.toFloat() * 100).toInt() else 0
+    // Authoritative Progress Calculation synchronized with Home Screen
+    val productivityStats = repository.getAllTasks().map { tasks ->
+        val now = System.currentTimeMillis()
+        val startOfDay = getStartOfDay(now)
+        val endOfDay = getEndOfDay(now)
+
+        // Today's relevant tasks (scheduled for today, created today for today, or completed today)
+        val todayRelevantTasks = tasks.filter { task ->
+            val targetTime = task.deadline ?: task.reminderTime
+            val isScheduledToday = targetTime != null && targetTime in startOfDay..endOfDay
+            val isCreatedTodayNoFuture = task.createdTime in startOfDay..endOfDay && (targetTime == null || targetTime <= endOfDay)
+            val isCompletedToday = task.lastCompletedTime != null && task.lastCompletedTime in startOfDay..endOfDay
+            val isCurrentlyCompleted = task.isCompleted && (task.updatedTime in startOfDay..endOfDay || isScheduledToday || isCreatedTodayNoFuture)
+
+            isScheduledToday || isCreatedTodayNoFuture || isCompletedToday || isCurrentlyCompleted
+        }
+
+        val completed = todayRelevantTasks.count { task ->
+            (task.lastCompletedTime != null && task.lastCompletedTime in startOfDay..endOfDay) ||
+            (task.isCompleted && (task.updatedTime in startOfDay..endOfDay || (task.deadline != null && task.deadline in startOfDay..endOfDay)))
+        }
+
+        val total = todayRelevantTasks.size
+        val pending = maxOf(0, total - completed)
+        val percent = if (total > 0) minOf(100, ((completed.toFloat() / total.toFloat()) * 100).toInt()) else 0
+
         Log.d(TAG, "PROGRESS_RECALCULATED total=$total completed=$completed pending=$pending percentage=$percent")
         Triple(completed, pending, percent)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, Triple(0, 0, 0))
