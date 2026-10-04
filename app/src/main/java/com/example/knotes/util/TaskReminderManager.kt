@@ -35,14 +35,16 @@ class TaskReminderManager @Inject constructor(
     }
 
     private fun schedulePrimaryReminder(task: Task) {
-        val timeInMillis = task.reminderTime ?: return
+        val rawTime = task.reminderTime ?: task.deadline ?: return
         val now = System.currentTimeMillis()
 
-        if (timeInMillis < now) {
+        // Allow up to 1 minute grace period for alarms scheduled for current minute
+        if (rawTime < now - 60_000L) {
             Log.d(TAG, "REMINDER_SKIPPED taskId=${task.id} type=primary reason=past_time")
             return
         }
 
+        val timeInMillis = maxOf(rawTime, now + 1000L)
         val requestCode = task.id * 100 + PRIMARY_REMINDER_OFFSET
         scheduleAlarm(
             requestCode = requestCode,
@@ -54,14 +56,15 @@ class TaskReminderManager @Inject constructor(
     }
 
     private fun scheduleSecondaryReminder(task: Task) {
-        val timeInMillis = task.secondaryReminderTime ?: return
+        val rawTime = task.secondaryReminderTime ?: return
         val now = System.currentTimeMillis()
 
-        if (timeInMillis < now) {
+        if (rawTime < now - 60_000L) {
             Log.d(TAG, "REMINDER_SKIPPED taskId=${task.id} type=secondary reason=past_time")
             return
         }
 
+        val timeInMillis = maxOf(rawTime, now + 1000L)
         val requestCode = task.id * 100 + SECONDARY_REMINDER_OFFSET
         scheduleAlarm(
             requestCode = requestCode,
@@ -135,7 +138,9 @@ class TaskReminderManager @Inject constructor(
 
     private fun cancelAlarm(requestCode: Int) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, ReminderReceiver::class.java)
+        val intent = Intent(context, ReminderReceiver::class.java).apply {
+            action = "ACTION_TASK_REMINDER"
+        }
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             requestCode,

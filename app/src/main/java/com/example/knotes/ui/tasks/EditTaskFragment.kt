@@ -373,6 +373,7 @@ class EditTaskFragment : Fragment() {
         }
 
         val repeatEndDate = if (recurrence != Recurrence.NONE) selectedRepeatEndDate else null
+        val effectiveReminder = selectedReminder ?: selectedDeadline
 
         val taskToSave = currentTask?.copy(
             title = title,
@@ -381,7 +382,7 @@ class EditTaskFragment : Fragment() {
             recurrence = recurrence,
             recurrenceEndDate = repeatEndDate,
             tags = tags,
-            reminderTime = selectedReminder,
+            reminderTime = effectiveReminder,
             relatedNoteId = selectedNoteId,
             updatedTime = System.currentTimeMillis()
         ) ?: Task(
@@ -391,7 +392,7 @@ class EditTaskFragment : Fragment() {
             recurrence = recurrence,
             recurrenceEndDate = repeatEndDate,
             tags = tags,
-            reminderTime = selectedReminder,
+            reminderTime = effectiveReminder,
             relatedNoteId = selectedNoteId,
             createdTime = System.currentTimeMillis(),
             updatedTime = System.currentTimeMillis()

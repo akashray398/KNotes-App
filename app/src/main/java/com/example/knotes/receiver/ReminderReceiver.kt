@@ -103,24 +103,28 @@ class ReminderReceiver : BroadcastReceiver() {
         )
         Log.d(TAG, "REMINDER_DELIVERED taskId=$taskId notificationId=$notificationId")
 
-        // Handle Recurrence or Delivery State Update
+        // Handle Recurrence
         val entityRecurrence = com.example.knotes.data.entity.Recurrence.valueOf(task.recurrence.name)
         if (entityRecurrence != com.example.knotes.data.entity.Recurrence.NONE) {
-            val nextTime = RecurrenceHelper.getNextOccurrence(task.reminderTime ?: scheduledTime, entityRecurrence)
-            if (nextTime != null) {
-                val updatedTask = task.copy(reminderTime = nextTime)
+            val nextTime = RecurrenceHelper.getNextOccurrence(
+                task.reminderTime ?: scheduledTime,
+                entityRecurrence,
+                task.recurrenceEndDate
+            )
+            val nextDeadline = RecurrenceHelper.getNextOccurrence(
+                task.deadline,
+                entityRecurrence,
+                task.recurrenceEndDate
+            )
+            if (nextTime != null || nextDeadline != null) {
+                val updatedTask = task.copy(
+                    reminderTime = nextTime,
+                    deadline = nextDeadline ?: task.deadline
+                )
                 taskRepository.updateTask(updatedTask)
                 taskReminderManager.scheduleTaskReminders(updatedTask)
                 Log.d(TAG, "REMINDER_RESCHEDULED taskId=$taskId nextOccurrence=$nextTime")
             }
-        } else {
-            // One-time task: clear delivered reminder time to prevent duplicate triggers on reboot/open
-            val updatedTask = if (reminderType == 1) {
-                task.copy(reminderTime = null)
-            } else {
-                task.copy(secondaryReminderTime = null)
-            }
-            taskRepository.updateTask(updatedTask)
         }
     }
 

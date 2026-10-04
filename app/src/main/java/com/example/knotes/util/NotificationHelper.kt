@@ -21,14 +21,20 @@ object NotificationHelper {
             
             val taskChannel = NotificationChannel(CHANNEL_ID_TASKS, "Task Reminders", NotificationManager.IMPORTANCE_HIGH).apply {
                 description = "Reminders for upcoming tasks"
+                enableVibration(true)
+                enableLights(true)
+                setShowBadge(true)
             }
             
             val dailyChannel = NotificationChannel(CHANNEL_ID_DAILY, "Daily Reminders", NotificationManager.IMPORTANCE_DEFAULT).apply {
                 description = "Daily summary of pending tasks"
+                enableVibration(true)
             }
             
             val overdueChannel = NotificationChannel(CHANNEL_ID_OVERDUE, "Overdue Reminders", NotificationManager.IMPORTANCE_HIGH).apply {
                 description = "Alerts for overdue tasks"
+                enableVibration(true)
+                enableLights(true)
             }
 
             notificationManager.createNotificationChannels(listOf(taskChannel, dailyChannel, overdueChannel))
@@ -60,6 +66,9 @@ object NotificationHelper {
             .setContentTitle(title)
             .setContentText(content)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setColor(context.getColor(R.color.purple_6750A4))
