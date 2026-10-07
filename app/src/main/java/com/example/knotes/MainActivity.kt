@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 
 @AndroidEntryPoint
@@ -80,17 +81,54 @@ class MainActivity : AppCompatActivity() {
         navController = navHostFragment.navController
         
         binding.bottomNavigation.setupWithNavController(navController)
-        binding.navigationView.setupWithNavController(navController)
+        setupNavHeader()
+        setupDrawerNavigation()
 
         observeAuthState()
         observeThemeMode()
         handleIntent(intent)
+    }
 
-        // Custom handling for theme only
-        binding.navigationView.menu.findItem(R.id.action_theme).setOnMenuItemClickListener {
-            showThemeDialog()
-            binding.drawerLayout.closeDrawers()
-            true
+    private fun setupDrawerNavigation() {
+        binding.navigationView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.action_theme -> {
+                    showThemeDialog()
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                else -> {
+                    navController.navigate(menuItem.itemId)
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+            }
+        }
+    }
+
+    private fun setupNavHeader() {
+        val headerView = binding.navigationView.getHeaderView(0)
+        val composeNavHeader = headerView.findViewById<ComposeView>(R.id.compose_nav_header)
+        composeNavHeader?.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val user = auth?.currentUser
+                val isSignedIn = user != null
+                val displayName = user?.displayName ?: if (isSignedIn) "KNotes Member" else "KNotes Guest"
+                val email = user?.email ?: ""
+                val streak by settingsManager.currentStreak.collectAsState(initial = 0)
+
+                com.example.knotes.ui.components.NavHeaderCompose(
+                    displayName = displayName,
+                    email = email,
+                    streak = streak,
+                    isSignedIn = isSignedIn,
+                    onHeaderClick = {
+                        navController.navigate(R.id.settingsFragment)
+                        binding.drawerLayout.closeDrawers()
+                    }
+                )
+            }
         }
     }
 

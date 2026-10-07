@@ -1,29 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/homeFragment"
             android:icon="@drawable/ic_app_logo"
-            android:title="Home" />
+            android:title="Home Workspace" />
         <item
             android:id="@+id/notesFragment"
             android:icon="@drawable/ic_notes"
-            android:title="Notes" />
+            android:title="Notes Library" />
         <item
             android:id="@+id/tasksFragment"
             android:icon="@drawable/ic_tasks"
-            android:title="Tasks" />
+            android:title="Tasks &amp; To-Dos" />
     </group>
 
-    <item android:title="Organize">
+    <item android:title="AI Intelligence">
+        <menu>
+            <item
+                android:id="@+id/aiChatFragment"
+                android:icon="@drawable/ic_ai_assist"
+                android:title="AI Assistant" />
+            <item
+                android:id="@+id/searchFragment"
+                android:icon="@drawable/ic_sort"
+                android:title="Smart Unified Search" />
+        </menu>
+    </item>
+
+    <item android:title="Organize &amp; Workspace">
         <menu>
             <item
                 android:id="@+id/foldersFragment"
                 android:icon="@drawable/ic_tag"
-                android:title="@string/manage_folders" />
+                android:title="Folders &amp; Tags" />
             <item
                 android:id="@+id/archiveFragment"
-                android:icon="@drawable/ic_sort"
+                android:icon="@drawable/ic_export"
                 android:title="Archive" />
             <item
                 android:id="@+id/trashFragment"
@@ -32,16 +46,17 @@
         </menu>
     </item>
 
-    <item android:title="Settings">
+    <item android:title="Preferences &amp; Cloud">
         <menu>
             <item
                 android:id="@+id/action_theme"
-                android:icon="@drawable/ic_ai_assist"
-                android:title="Appearance" />
+                android:icon="@drawable/ic_format_color_fill"
+                android:title="Appearance &amp; Theme" />
             <item
                 android:id="@+id/settingsFragment"
                 android:icon="@drawable/ic_sync"
-                android:title="Cloud Sync" />
+                android:title="Cloud Sync &amp; Account" />
         </menu>
     </item>
+
 </menu>
