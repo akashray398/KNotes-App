@@ -67,11 +67,9 @@ class MainActivity : AppCompatActivity() {
 
         checkNotificationPermission()
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            // Only apply side insets and top padding if needed. 
-            // Bottom navigation and AppBarLayout should handle their own insets.
-            v.setPadding(systemBars.left, 0, systemBars.right, 0)
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
             insets
         }
 
