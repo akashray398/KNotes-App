@@ -43,6 +43,7 @@ fun FocusVelocityDigestCompose(
     var remainingTimerSeconds by remember { mutableIntStateOf(15 * 60) }
     var isTimerRunning by remember { mutableStateOf(false) }
     var isTimerCompleted by remember { mutableStateOf(false) }
+    var isDurationPickerExpanded by remember { mutableStateOf(false) }
 
     // Live Ticker for Focus Burst Timer
     LaunchedEffect(isTimerRunning, remainingTimerSeconds) {
@@ -297,114 +298,156 @@ fun FocusVelocityDigestCompose(
                     }
                 }
             } else if (!isFocusTimerActive) {
-                // Manual Duration Selection View
+                // Progressive Compact Launcher View
                 Column(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize()
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Focus Burst Duration:",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    if (isDurationPickerExpanded) {
+                        // Expandable Duration Selector Row
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp)
                         ) {
-                            IconButton(
-                                onClick = {
-                                    if (selectedFocusMinutes > 5) selectedFocusMinutes -= 5
-                                },
-                                modifier = Modifier.size(28.dp)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("−", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
-                            }
+                                Text(
+                                    text = "Select Focus Duration:",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
 
-                            Text(
-                                text = "${selectedFocusMinutes}m",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-
-                            IconButton(
-                                onClick = {
-                                    if (selectedFocusMinutes < 120) selectedFocusMinutes += 5
-                                },
-                                modifier = Modifier.size(28.dp)
-                            ) {
-                                Text("+", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        listOf(5, 15, 25, 30, 45, 60).forEach { mins ->
-                            val isSelected = selectedFocusMinutes == mins
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .clickable { selectedFocusMinutes = mins },
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
-                                border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null
-                            ) {
-                                Box(
-                                    modifier = Modifier.padding(vertical = 6.dp),
-                                    contentAlignment = Alignment.Center
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
                                 ) {
+                                    IconButton(
+                                        onClick = { if (selectedFocusMinutes > 5) selectedFocusMinutes -= 5 },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Text("−", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+
                                     Text(
-                                        text = "${mins}m",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 11.sp
+                                        text = "${selectedFocusMinutes}m",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
                                     )
+
+                                    IconButton(
+                                        onClick = { if (selectedFocusMinutes < 120) selectedFocusMinutes += 5 },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Text("+", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                listOf(5, 15, 25, 30, 45, 60).forEach { mins ->
+                                    val isSelected = selectedFocusMinutes == mins
+                                    Surface(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .clickable { selectedFocusMinutes = mins },
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                                        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.padding(vertical = 5.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = "${mins}m",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 10.5.sp
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
+                    // Primary Focus Button with Integrated Duration Pill
                     OutlinedButton(
                         onClick = {
                             remainingTimerSeconds = selectedFocusMinutes * 60
                             isFocusTimerActive = true
                             isTimerRunning = true
                             isTimerCompleted = false
+                            isDurationPickerExpanded = false
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(44.dp),
+                            .height(46.dp),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_reminder),
-                            contentDescription = "Focus Timer",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Start ${selectedFocusMinutes}-Min Focus Burst 🎯",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_reminder),
+                                    contentDescription = "Focus Timer",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Start Focus Burst 🎯",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+
+                            // Interactive Duration Selector Pill
+                            Surface(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { isDurationPickerExpanded = !isDurationPickerExpanded },
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "⚙️ ${selectedFocusMinutes}m",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        fontSize = 11.sp
+                                    )
+                                    Spacer(modifier = Modifier.width(2.dp))
+                                    Text(
+                                        text = if (isDurationPickerExpanded) "▲" else "▾",
+                                        fontSize = 9.sp,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             } else {
