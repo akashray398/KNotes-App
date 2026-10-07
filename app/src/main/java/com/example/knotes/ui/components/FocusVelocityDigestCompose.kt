@@ -37,18 +37,22 @@ fun FocusVelocityDigestCompose(
     onEnergyLevelSelected: (EnergyLevel?) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    var selectedFocusMinutes by remember { mutableIntStateOf(15) }
     var isFocusTimerActive by remember { mutableStateOf(false) }
     var remainingTimerSeconds by remember { mutableIntStateOf(15 * 60) }
     var isTimerRunning by remember { mutableStateOf(false) }
+    var isTimerCompleted by remember { mutableStateOf(false) }
 
     // Live Ticker for Focus Burst Timer
-    LaunchedEffect(isTimerRunning) {
-        while (isTimerRunning && remainingTimerSeconds > 0 && isActive) {
+    LaunchedEffect(isTimerRunning, remainingTimerSeconds) {
+        if (isTimerRunning && remainingTimerSeconds > 0) {
             delay(1000L)
             remainingTimerSeconds--
-        }
-        if (remainingTimerSeconds == 0) {
+        } else if (remainingTimerSeconds == 0 && isTimerRunning) {
             isTimerRunning = false
+            isTimerCompleted = true
+            com.example.knotes.util.FocusAlarmPlayer.playCalmAlarm(context, 10_000L)
         }
     }
 
@@ -247,31 +251,161 @@ fun FocusVelocityDigestCompose(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 15-Min Focus Burst Timer Section
-            if (!isFocusTimerActive) {
-                OutlinedButton(
-                    onClick = {
-                        isFocusTimerActive = true
-                        isTimerRunning = true
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(44.dp),
-                    shape = RoundedCornerShape(14.dp)
+            // Focus Burst Timer Section
+            if (isTimerCompleted) {
+                // Completion Alert View
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_reminder),
-                        contentDescription = "Focus Timer",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Start 15-Min Focus Burst 🎯",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "🎉 FOCUS BURST COMPLETE!",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Great job! You completed a $selectedFocusMinutes-minute focus session.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "🔔 Calm alarm playing for 10 seconds...",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Button(
+                            onClick = {
+                                com.example.knotes.util.FocusAlarmPlayer.stopAlarm()
+                                isTimerCompleted = false
+                                isFocusTimerActive = false
+                                remainingTimerSeconds = selectedFocusMinutes * 60
+                            },
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Dismiss & Reset", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            } else if (!isFocusTimerActive) {
+                // Manual Duration Selection View
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Focus Burst Duration:",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp
+                        )
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    if (selectedFocusMinutes > 5) selectedFocusMinutes -= 5
+                                },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Text("−", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
+                            }
+
+                            Text(
+                                text = "${selectedFocusMinutes}m",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+
+                            IconButton(
+                                onClick = {
+                                    if (selectedFocusMinutes < 120) selectedFocusMinutes += 5
+                                },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Text("+", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf(5, 15, 25, 30, 45, 60).forEach { mins ->
+                            val isSelected = selectedFocusMinutes == mins
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { selectedFocusMinutes = mins },
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                                border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null
+                            ) {
+                                Box(
+                                    modifier = Modifier.padding(vertical = 6.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${mins}m",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            remainingTimerSeconds = selectedFocusMinutes * 60
+                            isFocusTimerActive = true
+                            isTimerRunning = true
+                            isTimerCompleted = false
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_reminder),
+                            contentDescription = "Focus Timer",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Start ${selectedFocusMinutes}-Min Focus Burst 🎯",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             } else {
                 Surface(
@@ -313,7 +447,7 @@ fun FocusVelocityDigestCompose(
                                 onClick = {
                                     isTimerRunning = false
                                     isFocusTimerActive = false
-                                    remainingTimerSeconds = 15 * 60
+                                    remainingTimerSeconds = selectedFocusMinutes * 60
                                 },
                                 modifier = Modifier.size(36.dp)
                             ) {

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Glowing Radiant Gradient Background -->
+    <path
+        android:pathData="M30,10 H90 C101,10 110,19 110,30 V90 C110,101 101,110 90,110 H30 C19,110 10,101 10,90 V30 C10,19 19,10 30,10 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="110"
+                android:endY="110"
+                android:startX="10"
+                android:startY="10"
+                android:type="linear">
+                <item android:color="#7D5260" android:offset="0.0" />
+                <item android:color="#6750A4" android:offset="0.5" />
+                <item android:color="#381E72" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Inner Soft Glass Reflection -->
+    <path
+        android:pathData="M30,10 H90 C101,10 110,19 110,30 V60 L50,110 H30 C19,110 10,101 10,90 V30 C10,19 19,10 30,10 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.12" />
+
+    <!-- Pure White Bold Stylized 'K' Stem & Arms -->
+    <!-- Vertical stem -->
+    <path
+        android:pathData="M42,34 V86"
+        android:strokeWidth="11"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
+
+    <!-- Top arm -->
+    <path
+        android:pathData="M42,60 L78,34"
+        android:strokeWidth="11"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
+
+    <!-- Bottom arm -->
+    <path
+        android:pathData="M46,60 L82,86"
+        android:strokeWidth="11"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
+
+    <!-- Vibrant Gold Sparkle Ball -->
+    <path
+        android:pathData="M92,64 A6,6 0 1,1 80,64 A6,6 0 1,1 92,64"
+        android:fillColor="#FFD54F" />
+
+    <!-- Teal Magic Star Sparkle -->
+    <path
+        android:pathData="M84,36 L86.5,30 L89,36 L93,38.5 L89,41 L86.5,47 L84,41 L78,38.5 Z"
+        android:fillColor="#80DEEA" />
+
+</vector>

@@ -92,28 +92,19 @@ fun SplashScreenCompose() {
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(24.dp)
         ) {
-            // Elastic Logo Badge Card
-            Surface(
+            // Elastic Radiant Logo Badge
+            Box(
                 modifier = Modifier
-                    .size(110.dp)
-                    .scale(logoScale.value)
-                    .clip(RoundedCornerShape(32.dp)),
-                shape = RoundedCornerShape(32.dp),
-                color = Color(0x2AFFFFFF),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x44FFFFFF)),
-                tonalElevation = 12.dp
+                    .size(120.dp)
+                    .scale(logoScale.value),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_app_logo),
-                        contentDescription = "KNotes Logo",
-                        modifier = Modifier.size(70.dp),
-                        tint = Color.Unspecified
-                    )
-                }
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_splash_logo),
+                    contentDescription = "KNotes Logo",
+                    modifier = Modifier.size(120.dp),
+                    tint = Color.Unspecified
+                )
             }
 
             Spacer(modifier = Modifier.height(28.dp))
