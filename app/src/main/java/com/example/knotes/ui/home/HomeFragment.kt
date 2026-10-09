@@ -132,6 +132,9 @@ class HomeFragment : Fragment() {
                         val action = HomeFragmentDirections.actionHomeFragmentToEditTaskFragment(taskId)
                         findNavController().navigate(action)
                     },
+                    onOpenAnalyticsClick = {
+                        findNavController().navigate(R.id.analyticsFragment)
+                    },
                     onNavigateToSettings = {
                         findNavController().navigate(R.id.settingsFragment)
                     },

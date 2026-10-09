@@ -48,6 +48,7 @@ fun HomeScreenCompose(
     onNavigateToTasks: () -> Unit,
     onNavigateToCreateTask: () -> Unit,
     onNavigateToEditTask: (Int) -> Unit,
+    onOpenAnalyticsClick: () -> Unit = {},
     onNavigateToSettings: () -> Unit,
     onNavigateToArchive: () -> Unit,
     onNavigateToTrash: () -> Unit,
@@ -167,7 +168,8 @@ fun HomeScreenCompose(
             FocusVelocityDigestCompose(
                 state = state,
                 selectedEnergyLevel = selectedEnergyLevel,
-                onEnergyLevelSelected = { selectedEnergyLevel = it }
+                onEnergyLevelSelected = { selectedEnergyLevel = it },
+                onOpenAnalyticsClick = onOpenAnalyticsClick
             )
 
             Spacer(modifier = Modifier.height(16.dp))

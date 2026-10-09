@@ -166,4 +166,9 @@
         android:name="com.example.knotes.ui.auth.EmailVerificationFragment"
         android:label="Verify Email" />
 
+    <fragment
+        android:id="@+id/analyticsFragment"
+        android:name="com.example.knotes.ui.analytics.AnalyticsFragment"
+        android:label="Productivity Analytics" />
+
 </navigation>

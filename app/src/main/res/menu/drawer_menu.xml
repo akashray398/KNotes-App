@@ -26,6 +26,10 @@
                 android:id="@+id/searchFragment"
                 android:icon="@drawable/ic_sort"
                 android:title="Smart Unified Search" />
+            <item
+                android:id="@+id/analyticsFragment"
+                android:icon="@drawable/ic_ai_assist"
+                android:title="Analytics &amp; Habit Heatmap" />
         </menu>
     </item>
 

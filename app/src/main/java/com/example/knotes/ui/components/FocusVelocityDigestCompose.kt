@@ -35,6 +35,7 @@ fun FocusVelocityDigestCompose(
     state: HomeViewModel.HomeState,
     selectedEnergyLevel: EnergyLevel?,
     onEnergyLevelSelected: (EnergyLevel?) -> Unit,
+    onOpenAnalyticsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -199,6 +200,24 @@ fun FocusVelocityDigestCompose(
                     color = velocityColor,
                     trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onOpenAnalyticsClick() },
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "📊 View 30-Day Heatmap & Analytics ➔",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 11.sp
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
