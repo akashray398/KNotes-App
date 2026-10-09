@@ -69,6 +69,7 @@ fun HomeScreenCompose(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .background(MaterialTheme.colorScheme.surface)
     ) {
         // Branded Home Top Bar
